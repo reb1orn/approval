@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link rel="shortcut icon" type="image/x-icon" href="" media="screen" />
+  <link rel="icon" href="static/img/favicon.ico" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+  <link href="https://cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <title>伯通云管理系统</title>
+<style>
+    html{
+        min-width: 1280px;
+        -webkit-text-size-adjust:none;
+        /*overflow-y:hidden;*/
+    }
+</style>
+</head>
+
+
+<body>
+    <script>
+        var isIE = function (ver) {
+            var b = document.createElement('b')
+            b.innerHTML = '<!--[if IE ' + ver + ']><i></i><![endif]-->'
+            return b.getElementsByTagName('i').length === 1
+        }
+        if (isIE(9)|| isIE(8) || isIE(7) || isIE(6)) {
+            window.location.href = 'error.html'
+        } else {}
+    </script>
+  <div id="app"></div>
+</body>
+
+</html>
