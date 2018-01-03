@@ -352,7 +352,8 @@ export default {
       selectinputRightlists: [],
       selectLeftlists: [],
       selectRightlists: [],
-
+ timeTrue: false,
+      time: 60,
       definiBox: false,
       sBelectMembersVal: "请选择特定企业部门",
       lBeftcheckNull: "",
@@ -2522,10 +2523,20 @@ export default {
           self.uidsVal.length > 0 &&
           appIdsVal.length > 0
         ) {
+           if (this.timeTrue == false) {
+          self.timeTrue = true;
           this.getorgAdmineditOrgAdmin(addOBj)
             .then(data => {
               if (data.code == "000000") {
                 if (data.data == true) {
+                    self.time = 60;
+                let timer = setInterval(() => {
+                  self.time--;
+                  if (self.time == 0) {
+                    clearInterval(timer);
+                    self.timeTrue = false;
+                  }
+                }, 1000);
                   this.$message({
                     type: "success",
                     message: "修改成功!"
@@ -2535,12 +2546,14 @@ export default {
                     path: url
                   });
                 } else {
+                  self.timeTrue = false;
                   this.$message({
                     type: "info",
                     message: "保存失败!"
                   });
                 }
               } else {
+                self.timeTrue = false;
                 this.$message({
                   type: "info",
                   message: data.msg
@@ -2563,7 +2576,10 @@ export default {
                 });
               }
             });
-        } else {
+        }else{
+
+        } 
+        }else {
           var msgStr = "请填写完成信息";
           if (self.uBidsVal.length == 0) {
             msgStr = "特定部门，请选择最少一个部门";
@@ -2588,10 +2604,20 @@ export default {
           scopeId: this.fanweiLists[this.selDivIndex].num
         };
         if (self.uidsVal.length > 0 && appIdsVal.length > 0) {
+           if (this.timeTrue == false) {
+          self.timeTrue = true;
           this.getorgAdmineditOrgAdmin(addOBj)
             .then(data => {
               if (data.code == "000000") {
                 if (data.data == true) {
+                  self.time = 60;
+                let timer = setInterval(() => {
+                  self.time--;
+                  if (self.time == 0) {
+                    clearInterval(timer);
+                    self.timeTrue = false;
+                  }
+                }, 1000);
                   var url = "/home/set/setchildManager";
                   this.$message({
                     type: "success",
@@ -2601,12 +2627,14 @@ export default {
                     path: url
                   });
                 } else {
+                   self.timeTrue = false;
                   this.$message({
                     type: "info",
                     message: "保存失败!"
                   });
                 }
               } else {
+                 self.timeTrue = false;
                 this.$message({
                   type: "info",
                   message: data.msg
@@ -2629,7 +2657,11 @@ export default {
                 });
               }
             });
-        } else {
+        }else{
+
+        } 
+        
+        }else {
           var msgStr = "请填写完成信息";
           if (self.uidsVal.length == 0) {
             msgStr = "请选择最少一个成员";

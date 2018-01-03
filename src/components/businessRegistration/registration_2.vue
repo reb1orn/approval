@@ -78,7 +78,9 @@ export default {
       value5: "",
       value6: "",
       pid: "",
-      telphone: ""
+      telphone: "",
+       timeTrue: false,
+      time: 60
     };
   },
   created: function() {
@@ -200,12 +202,8 @@ export default {
     registerClick() {
       var self = this;
       if (this.valior()) {
-        // var cityStr = ''
-        // this.options_1.forEach(function (ele, ind) {
-        //     if (ele.id == self.value5) {
-        //         cityStr = ele.name
-        //     }
-        // })
+        if (this.timeTrue == false) {
+            self.timeTrue = true;
         this.getregister({
           orgName: this.name,
           orgType: this.value6,
@@ -217,17 +215,27 @@ export default {
           .then(data => {
             if (data.code == "000000") {
               if (data.data == true) {
+                self.time = 60;
+                let timer = setInterval(() => {
+                  self.time--;
+                  if (self.time == 0) {
+                    clearInterval(timer);
+                    self.timeTrue = false;
+                  }
+                }, 1000);
                 this.$router.push({
                   path: "/registration_3"
                 });
                 sessionStorage.setItem("aaaaa",'ccccc');
               } else {
+                this.timeTrue = false;
                 this.$message({
                   type: "info",
                   message: data.msg
                 });
               }
             } else {
+              this.timeTrue = false;
               this.$message({
                 type: "info",
                 message: data.msg
@@ -251,6 +259,9 @@ export default {
               this.loading = false;
             }
           });
+      }else{
+
+      }
       } else {
         this.valior();
       }

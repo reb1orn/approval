@@ -361,7 +361,8 @@ export default {
       sBelectRightlists: [],
       uBidsVal: "",
       selectBinputRightlists: [],
-
+timeTrue: false,
+      time: 60,
       xiaLists: [],
       specMem: false,
       fanweiLists: [
@@ -2308,10 +2309,20 @@ export default {
           self.uidsVal.length > 0 &&
           appIdsVal.length > 0
         ) {
+          if (this.timeTrue == false) {
+          self.timeTrue = true;
           this.getadminsave(addOBj)
             .then(data => {
               if (data.code == "000000") {
                 if (data.data == true) {
+                   self.time = 60;
+                let timer = setInterval(() => {
+                  self.time--;
+                  if (self.time == 0) {
+                    clearInterval(timer);
+                    self.timeTrue = false;
+                  }
+                }, 1000);
                   this.$message({
                     type: "success",
                     message: "保存成功!"
@@ -2321,12 +2332,14 @@ export default {
                     path: url
                   });
                 } else {
+                   self.timeTrue = false;
                   this.$message({
                     type: "info",
                     message: "保存失败!"
                   });
                 }
               } else {
+                 self.timeTrue = false;
                 this.$message({
                   type: "info",
                   message: data.msg
@@ -2349,7 +2362,12 @@ export default {
                 });
               }
             });
-        } else {
+        
+        }else{
+
+        } 
+        }
+        else {
           var msgStr = "请填写完成信息";
           if (self.uBidsVal.length == 0) {
             msgStr = "特定部门，请选择最少一个部门";
@@ -2373,10 +2391,20 @@ export default {
           scopeId: this.fanweiLists[this.selDivIndex].num
         };
         if (self.uidsVal.length > 0 && appIdsVal.length > 0) {
+          if (this.timeTrue == false) {
+            self.timeTrue = true;
           this.getadminsave(addOBj)
             .then(data => {
               if (data.code == "000000") {
                 if (data.data == true) {
+                  self.time = 60;
+                let timer = setInterval(() => {
+                  self.time--;
+                  if (self.time == 0) {
+                    clearInterval(timer);
+                    self.timeTrue = false;
+                  }
+                }, 1000);
                   this.$message({
                     type: "success",
                     message: "保存成功!"
@@ -2386,12 +2414,14 @@ export default {
                     path: url
                   });
                 } else {
+                   this.timeTrue = false;
                   this.$message({
                     type: "info",
                     message: "保存失败!"
                   });
                 }
               } else {
+                 this.timeTrue = false;
                 this.$message({
                   type: "info",
                   message: data.msg
@@ -2414,7 +2444,14 @@ export default {
                 });
               }
             });
-        } else {
+        
+        
+        
+        }else{
+
+        } 
+        }
+        else {
           var msgStr = "请填写完成信息";
           if (self.uidsVal.length == 0) {
             msgStr = "请选择最少一个成员";
