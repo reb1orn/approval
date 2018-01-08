@@ -3,7 +3,7 @@
         <div class="main_left">
         	<div class="approve">公告</div>
                 <ul>
-                <li v-for="(list,index) in chidlists" :class="{sadeNav:isSadeNav == index}" @click="sadeNavClick(index)">
+                <li v-for="(list,index) in chidlists" :key="index" :class="{sadeNav:isSadeNav == index}" @click="sadeNavClick(index)">
                     <div>
                         <span>{{list.name}}</span>
                     </div>

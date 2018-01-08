@@ -2322,7 +2322,7 @@ timeTrue: false,
                     clearInterval(timer);
                     self.timeTrue = false;
                   }
-                }, 1000);
+                }, 2000);
                   this.$message({
                     type: "success",
                     message: "保存成功!"

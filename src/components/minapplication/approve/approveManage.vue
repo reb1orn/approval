@@ -18,7 +18,7 @@
 					<div>
 						<span>编辑表单</span>
 						<span @click='ApproverSettings(index)'>审批人设置</span>
-						<span @click='recipients(index)'>抄送人</span>
+						<span @click='recipients(index)'>抄送人({{lists.copyUserCount}})</span>
 						<span>停用</span>
 					</div>
 				</li>
@@ -158,903 +158,819 @@
 </div>
 </template>
 <script>
-	import {
-		mapActions
-	} from 'vuex';
-	export default {
-		name: 'set',
-		data() {
-			return {
-				ModalsShow:false,
-				searchsmemVal: "",
-				itemsa:[],
-				navLists: [],
-				checked: false,
-				selectLeftlists: [],
-				selectRightlists: [],
-				counter :0,
-				conditions:'',
-				copyPeople:''
-			}
-		},
+import { mapActions } from "vuex";
+export default {
+  name: "set",
+  data() {
+    return {
+			copyUserCount:'',
+      ModalsShow: false,
+      searchsmemVal: "",
+      itemsa: [],
+      navLists: [],
+      checked: false,
+      selectLeftlists: [],
+      selectRightlists: [],
+      counter: 0,
+      conditions: "",
+      copyPeople: ""
+    };
+  },
 
-		created: function () {
-				this.listFun();
-				sessionStorage.removeItem('modelId')
-				sessionStorage.removeItem('modelName')
-				sessionStorage.removeItem('setting')
-				sessionStorage.removeItem('approveList')
-				//  获取审批列表
-				let self = this
-				self.getapprovalList({
-					oid: sessionStorage.getItem("orgId"),
-					access_token:sessionStorage.getItem('accessToken')
-				}).then((data)=>{
-					self.itemsa = data.data
-				}).catch(msg=>{
-					 this.$message({
-						type: "info",
-						message: data.msg
-					});
-				})
-		},
-		watch: {
+  created: function() {
+        // 若此人中途无权限，则跳到登录页
+    this.getbusiness({
+      oid: sessionStorage.getItem("orgId"),
+      uid: sessionStorage.getItem("userId")
+    })
+      .then(data => {
+        if(data.code == "100005"){
+          this.$message({
+            type: "info",
+            message: '对不起，没有权限'
+          });
+          this.$router.push({
+            path:'/login'
+          })
+        }
+      })
+      .catch(msg => {
+        if (JSON.parse(msg.bodyText).code == "188888") {
+          this.$message({
+            type: "info",
+            message: JSON.parse(msg.bodyText).msg
+          });
+          this.$router.push({
+            path: "/login"
+          });
+        } else {
+          this.$message({
+            type: "info",
+            message: "服务器错误!"
+          });
+        }
+      });
+    this.listFun();
+    sessionStorage.removeItem("modelId");
+    sessionStorage.removeItem("modelName");
+    sessionStorage.removeItem("setting");
+    sessionStorage.removeItem("approveList");
+    //  获取审批列表
+    let self = this;
+    self
+      .getapprovalList({
+        oid: sessionStorage.getItem("orgId"),
+        access_token: sessionStorage.getItem("accessToken")
+      })
+      .then(data => {
+        if (data.code == "000000") {
+          self.itemsa = data.data;
+        } else {
+          this.$message({
+            type: "info",
+            message: data.msg
+          });
+        }
+      })
+      .catch(msg => {
+        this.$message({
+          type: "info",
+          message: msg.statusText
+        });
+      });
+  },
+  watch: {},
+  filters: {
+    typeFun: function(val) {
+      if (val == 1) {
+        return "部门";
+      } else {
+        return "人员";
+      }
+    }
+  },
+  methods: {
+    chooseCharge() {
+      let self = this;
+      self.counter += 1;
+      self.selectRightlists.push({
+        id: "admin_1_" + self.counter,
+        name: "第" + self.counter + "级主管",
+        open: false
+      });
+    },
+    listFun() {
+      var self = this;
+      self.sBelectLeftlists = [];
+      self.selectLeftlists = [];
+      self.navLists = [];
+      self.nBavLists = [];
+      self.checked = false;
+      // 查询人员列表
+      this.getdeptstaff({
+        oid: sessionStorage.getItem("orgId"),
+        uid: sessionStorage.getItem("userId"),
+        deptId: ""
+      })
+        .then(data => {
+          if (data.code == "000000") {
+            self.navLists.push({ name: data.data.name, deptId: data.data.id });
+            self.nBavLists.push({ name: data.data.name, deptId: data.data.id });
+            this.getdeptstaff({
+              oid: sessionStorage.getItem("orgId"),
+              uid: sessionStorage.getItem("userId"),
+              deptId: self.navLists[0].deptId
+            })
+              .then(data => {
+                if (data.code == "000000") {
+                  data.data.forEach(function(ele, ind) {
+                    self.selectLeftlists.push({
+                      name: ele.name,
+                      open: false,
+                      parentId: ele.parentId,
+                      type: ele.type,
+                      id: ele.id
+                    });
+                  });
+                  self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
+                    self.selectRightlists.forEach(function(eleRight, rightInd) {
+                      if (eleLeft.id == eleRight.id) {
+                        self.selectLeftlists[eleLeftInd].open = true;
+                      }
+                    });
+                  });
+                  var rArrs = [];
+                  this.selectLeftlists.forEach(function(ele, ind) {
+                    if (ele.open == true) {
+                      rArrs.push({
+                        name: ele.name,
+                        open: false,
+                        parentId: ele.parentId,
+                        type: ele.type,
+                        id: ele.id
+                      });
+                    }
+                  });
+                  var hash = {};
+                  rArrs = rArrs.reduce(function(item, next) {
+                    hash[next.id]
+                      ? ""
+                      : (hash[next.id] = true && item.push(next));
+                    return item;
+                  }, []);
+                  if (rArrs.length == this.selectLeftlists.length) {
+                    self.checked = true;
+                  } else {
+                    self.checked = false;
+                  }
+                } else if (data.code == "100005") {
+                  self.$message(data.msg);
+                  self.$router.push({
+                    path: "/login"
+                  });
+                } else {
+                }
+              })
+              .catch(msg => {
+                this.$message({
+                  type: "info",
+                  message: msg.statusText
+                });
+              });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: msg.statusText
+          });
+        });
+      self.xiaLists = [];
+    },
+    // 选择成员弹出框取消
+    cancelClick() {
+      var self = this;
+      this.selectRightlists = [];
+      this.selectLeftlists.forEach(function(ele) {
+        ele.open = false;
+      });
+      this.ModalsShow = false;
+      self.counter = 0;
+    },
+    //选择成员弹出框确认
+    confirmClick() {
+      var self = this;
+      this.searchsmemVal = "";
+      this.ModalsShow = false;
+      var val = "";
+      self.selectinputRightlists = [];
+      this.selectRightlists.forEach(function(ele, ind) {
+        self.selectinputRightlists.push({
+          name: ele.name,
+          open: false,
+          parentId: ele.parentId,
+          type: ele.type,
+          id: ele.id
+        });
+      });
+      var selectRightlistsHash = {};
+      self.selectinputRightlists = self.selectinputRightlists.reduce(function(
+        item,
+        next
+      ) {
+        selectRightlistsHash[next.id]
+          ? ""
+          : (selectRightlistsHash[next.id] = true && item.push(next));
+        return item;
+      },
+      []);
+      self.uidsVal = "";
+      if (this.selectinputRightlists.length == 1) {
+        val = this.selectinputRightlists[0].name;
+        self.uidsVal = this.selectinputRightlists[0].id;
+      } else {
+        this.selectinputRightlists.forEach(function(ele, ind) {
+          val += ele.name + ",";
+          self.uidsVal += ele.id + ",";
+        });
+        self.uidsVal = self.uidsVal.substr(0, self.uidsVal.length - 1);
+      }
+      this.selectMembersVal = val;
+      self.counter = 0;
+      let willCompile = self.itemsa[self.copyPeople].modelId;
+      self
+        .getapprovalcopysave({
+          modelId: willCompile,
+          userIds: self.uidsVal
+        })
+        .then(data => {
+          if (data.code == "000000") {
+                let self = this;
+            self.getapprovalList({
+                oid: sessionStorage.getItem("orgId"),
+                access_token: sessionStorage.getItem("accessToken")
+              })
+              .then(data => {
+                if (data.code == "000000") {
+                  self.itemsa = data.data;
+                } else {
+                  this.$message({
+                    type: "info",
+                    message: data.msg
+                  });
+                }
+              })
+              .catch(msg => {
+                this.$message({
+                  type: "info",
+                  message: msg.statusText
+                });
+              });
+            this.$message({
+              type: "success",
+              message: "保存成功！"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: msg.statusText
+          });
+        });
+    },
+    righthandleCheckedCitiesChange(index) {
+      var self = this;
+      this.selectRightlists[index].open = !this.selectRightlists[index].open;
+    },
+    commodityRightClick() {
+      var self = this;
+      var rights = [];
+      var seRight = [];
+      self.selectRightlists.forEach(function(ele, ind) {
+        if (ele.open == false) {
+          rights.push({
+            name: ele.name,
+            open: false,
+            parentId: ele.parentId,
+            type: ele.type,
+            id: ele.id
+          });
+        } else {
+          seRight.push({
+            name: ele.name,
+            open: false,
+            parentId: ele.parentId,
+            type: ele.type,
+            id: ele.id
+          });
+        }
+      });
+      self.selectRightlists = rights;
+      this.selectLeftlists.forEach(function(eleL, indL) {
+        seRight.forEach(function(ele, ind) {
+          if (eleL.id === ele.id) {
+            self.selectLeftlists[indL].open = false;
+          }
+        });
+      });
 
-		},
-		filters: {
-			typeFun: function(val) {
-			if (val == 1) {
-				return "部门";
-			} else {
-				return "人员";
-			}
-			},
-		
-		},
-		methods: {
-			chooseCharge(){
-				let self = this
-				self.counter += 1
-				self.selectRightlists.push({
-					id:'admin_1_' + self.counter ,
-					name:'第' + self.counter  + '级主管',
-					open: false,
-						
-				})
-			},
-			listFun() {
-					var self = this;
-					self.sBelectLeftlists = [];
-					self.selectLeftlists = [];
-					self.navLists = [];
-					self.nBavLists = [];
-					self.checked = false;
-					// 查询人员列表
-					this.getdeptstaff({
-						oid: sessionStorage.getItem("orgId"),
-						uid: sessionStorage.getItem("userId"),
-						deptId: ""
-					})
-						.then(data => {
-						if (data.code == "000000") {
-							self.navLists.push({ name: data.data.name, deptId: data.data.id });
-							self.nBavLists.push({ name: data.data.name, deptId: data.data.id });
-							this.getdeptstaff({
-							oid: sessionStorage.getItem("orgId"),
-							uid: sessionStorage.getItem("userId"),
-							deptId: self.navLists[0].deptId
-							})
-							.then(data => {
-								if (data.code == "000000") {
-								data.data.forEach(function(ele, ind) {
-									self.selectLeftlists.push({
-									name: ele.name,
-									open: false,
-									parentId: ele.parentId,
-									type: ele.type,
-									id: ele.id
-									});
-								});
-								self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-									self.selectRightlists.forEach(function(eleRight, rightInd) {
-									if (eleLeft.id == eleRight.id) {
-										self.selectLeftlists[eleLeftInd].open = true;
-									}
-									});
-								});
-								var rArrs = [];
-								this.selectLeftlists.forEach(function(ele, ind) {
-									if (ele.open == true) {
-									rArrs.push({
-										name: ele.name,
-										open: false,
-										parentId: ele.parentId,
-										type: ele.type,
-										id: ele.id
-									});
-									}
-								});
-								var hash = {};
-								rArrs = rArrs.reduce(function(item, next) {
-									hash[next.id]
-									? ""
-									: (hash[next.id] = true && item.push(next));
-									return item;
-								}, []);
-								if (rArrs.length == this.selectLeftlists.length) {
-									self.checked = true;
-								} else {
-									self.checked = false;
-								}
-								} else if (data.code == "100005") {
-								self.$message(data.msg);
-								self.$router.push({
-									path: "/login"
-								});
-								} else {
-								this.$message({
-									type: "info",
-									message: data.msg
-								});
-								}
-							})
-							.catch(msg => {
-								if (JSON.parse(msg.bodyText).code == "188888") {
-								this.$message({
-									type: "info",
-									message: JSON.parse(msg.bodyText).msg
-								});
-								this.$router.push({
-									path: "/login"
-								});
-								} else {
-								this.$message({
-									type: "info",
-									message:data.msg
-								});
-								}
-							});
-							this.getdeptstaff({
-							oid: sessionStorage.getItem("orgId"),
-							uid: sessionStorage.getItem("userId"),
-							deptId: self.nBavLists[0].deptId
-							})
-							.then(data => {
-								if (data.code == "000000") {
-								data.data.forEach(function(ele, ind) {
-									if (ele.type == 1) {
-									self.sBelectLeftlists.push({
-										name: ele.name,
-										open: false,
-										parentId: ele.parentId,
-										type: ele.type,
-										id: ele.id
-									});
-									}
-								});
-								self.sBelectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-									self.sBelectRightlists.forEach(function(
-									eleRight,
-									rightInd
-									) {
-									if (eleLeft.id == eleRight.id) {
-										self.sBelectLeftlists[eleLeftInd].open = true;
-									}
-									});
-								});
-								var rbArrs = [];
-								this.sBelectLeftlists.forEach(function(ele, ind) {
-									if (ele.open == true) {
-									rbArrs.push({
-										name: ele.name,
-										open: false,
-										parentId: ele.parentId,
-										type: ele.type,
-										id: ele.id
-									});
-									}
-								});
-								var hash = {};
-								rbArrs = rbArrs.reduce(function(item, next) {
-									hash[next.id]
-									? ""
-									: (hash[next.id] = true && item.push(next));
-									return item;
-								}, []);
-								if (rbArrs.length == this.sBelectLeftlists.length) {
-									self.cBhecked = true;
-								} else {
-									self.cBhecked = false;
-								}
-								} else if (data.code == "100005") {
-								self.$message(data.msg);
-								self.$router.push({
-									path: "/login"
-								});
-								} else {
-								this.$message({
-									type: "info",
-									message: data.msg
-								});
-								}
-							})
-							.catch(msg => {								
-								this.$message({
-									type: "info",
-									message: data.msg
-								});								
-							});
-						} else if (data.code == "100005") {
-							self.$message(data.msg);
-							self.$router.push({
-							path: "/login"
-							});
-						} else {
-							this.$message({
-							type: "info",
-							message: data.msg
-							});
-						}
-						})
-						.catch(msg => {
-						if (JSON.parse(msg.bodyText).code == "188888") {
-							this.$message({
-							type: "info",
-							message: JSON.parse(msg.bodyText).msg
-							});
-							this.$router.push({
-							path: "/login"
-							});
-						} else {
-							this.$message({
-							type: "info",
-							message: data.msg
-							});
-						}
-						});
-					self.xiaLists = [];
-					// 微应用权限列表
-					this.getauthgetAllAuth({
-						orgId: sessionStorage.getItem("orgId")
-					})
-						.then(data => {
-						if (data.code == "000000") {
-							data.data.forEach(function(ele, ind) {
-							self.xiaLists.push({
-								appId:ele.appId,
-								authName: ele.authName,
-								open: false,
-								authValue: ele.authValue,
-								id: ele.id,
-								orgId: ele.orgId
-							});
-							});
-						
-						} else {
-							this.$message({
-							type: "info",
-							message: data.msg
-							});
-						}
-						})
-						.catch(msg => {
-						if (JSON.parse(msg.bodyText).code == "188888") {
-							this.$message({
-							type: "info",
-							message: JSON.parse(msg.bodyText).msg
-							});
-							this.$router.push({
-							path: "/login"
-							});
-						} else {
-							this.$message({
-							type: "info",
-							message: data.msg
-							});
-						}
-						});
-				},
-			// 选择成员弹出框取消
-			cancelClick() {
-				var self = this;
-				this.selectRightlists = [];
-				this.selectLeftlists.forEach(function(ele) {
-					ele.open = false;
-				});
-				this.ModalsShow = false;
-				self.counter = 0
-			},
-			//选择成员弹出框确认
-			confirmClick() {
-				var self = this;
-				this.searchsmemVal = "";
-				this.ModalsShow = false;
-				var val = "";
-				self.selectinputRightlists = [];
-				this.selectRightlists.forEach(function(ele, ind) {
-					self.selectinputRightlists.push({
-					name: ele.name,
-					open: false,
-					parentId: ele.parentId,
-					type: ele.type,
-					id: ele.id
-					});
-				});
-				var selectRightlistsHash = {};
-				self.selectinputRightlists = self.selectinputRightlists.reduce(function(
-					item,
-					next
-				) {
-					selectRightlistsHash[next.id]
-					? ""
-					: (selectRightlistsHash[next.id] = true && item.push(next));
-					return item;
-				},
-				[]);
-				self.uidsVal = "";
-				if (this.selectinputRightlists.length == 1) {
-					val = this.selectinputRightlists[0].name;
-					self.uidsVal = this.selectinputRightlists[0].id;
-				} else {
-					this.selectinputRightlists.forEach(function(ele, ind) {
-					val += ele.name + ",";
-					self.uidsVal += ele.id + ",";
-					});
-					self.uidsVal = self.uidsVal.substr(0, self.uidsVal.length - 1);
-				}
-					this.selectMembersVal = val;
-					self.counter = 0
-				 let willCompile = self.itemsa[self.copyPeople].modelId
-				 self.getapprovalcopysave({
-                    modelId: willCompile, 
-                    userIds:self.uidsVal
-				 }).then((data)=>{
-                         if(data.code == '000000'){
-							this.$message({
-								type:'success',
-								message:'保存成功！'
-							}) 
-						 }else{
-							this.$message({
-								type:'info',
-								message:data.msg
-							}) 
-						 }
-				 }).catch(msg=>{
-					this.$message({
-					   type:'info',
-					   message:data.msg
-				   })  
-				 })
-				},
-			righthandleCheckedCitiesChange(index) {
-				var self = this;
-				this.selectRightlists[index].open = !this.selectRightlists[index].open;
-			},
-			commodityRightClick() {
-				var self = this;
-				var rights = [];
-				var seRight = [];
-				self.selectRightlists.forEach(function(ele, ind) {
-					if (ele.open == false) {
-					rights.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-					});
-					} else {
-					seRight.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-					});
-					}
-				});
-				self.selectRightlists = rights;
-				this.selectLeftlists.forEach(function(eleL, indL) {
-					seRight.forEach(function(ele, ind) {
-					if (eleL.id === ele.id) {
-						self.selectLeftlists[indL].open = false;
-					}
-					});
-				});
+      this.selectLeftlists.forEach(function(eleL, indL) {
+        rights.forEach(function(ele, ind) {
+          if (eleL.id === ele.id) {
+            self.selectLeftlists[indL].open = true;
+          }
+        });
+      });
+      var rtArrs = [];
+      this.selectLeftlists.forEach(function(ele, ind) {
+        if (ele.open == true) {
+          rtArrs.push({
+            name: ele.name,
+            open: false,
+            parentId: ele.parentId,
+            type: ele.type,
+            id: ele.id
+          });
+        }
+      });
+      var rfArrs = [];
+      this.selectLeftlists.forEach(function(ele, ind) {
+        if (ele.type == 2) {
+          rfArrs.push({
+            name: ele.name,
+            open: false,
+            parentId: ele.parentId,
+            type: ele.type,
+            id: ele.id
+          });
+        }
+      });
+      var hashf = {};
+      rfArrs = rfArrs.reduce(function(item, next) {
+        hashf[next.id] ? "" : (hashf[next.id] = true && item.push(next));
+        return item;
+      }, []);
+      var hasht = {};
+      rtArrs = rtArrs.reduce(function(item, next) {
+        hasht[next.id] ? "" : (hasht[next.id] = true && item.push(next));
+        return item;
+      }, []);
+      if (rtArrs.length == rfArrs.length) {
+        self.checked = true;
+      } else {
+        self.checked = false;
+      }
+    },
+    commodityLeftClick() {
+      var self = this;
+      var rArrs = [];
+      this.selectLeftlists.forEach(function(ele, ind) {
+        if (ele.open == true) {
+          self.selectRightlists.push({
+            name: ele.name,
+            open: false,
+            parentId: ele.parentId,
+            type: ele.type,
+            id: ele.id
+          });
+        }
+      });
+      var hash = {};
+      self.selectRightlists = self.selectRightlists.reduce(function(
+        item,
+        next
+      ) {
+        hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
+        return item;
+      },
+      []);
+    },
+    // 人员下一级
+    leftNextClick(index) {
+      var self = this;
+      this.getdeptstaff({
+        oid: sessionStorage.getItem("orgId"),
+        uid: sessionStorage.getItem("userId"),
+        deptId: self.selectLeftlists[index].id
+      })
+        .then(data => {
+          if (data.code == "000000") {
+            self.navLists.push({
+              name: self.selectLeftlists[index].name,
+              deptId: self.selectLeftlists[index].id
+            });
+            self.selectLeftlists = [];
+            data.data.forEach(function(ele, ind) {
+              self.selectLeftlists.push({
+                name: ele.name,
+                open: false,
+                parentId: ele.parentId,
+                type: ele.type,
+                id: ele.id
+              });
+            });
+            self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
+              self.selectRightlists.forEach(function(eleRight, rightInd) {
+                if (eleLeft.id == eleRight.id) {
+                  self.selectLeftlists[eleLeftInd].open = true;
+                }
+              });
+            });
+            var rArrs = [];
+            this.selectLeftlists.forEach(function(ele, ind) {
+              if (ele.open == true) {
+                rArrs.push({
+                  name: ele.name,
+                  open: false,
+                  parentId: ele.parentId,
+                  type: ele.type,
+                  id: ele.id
+                });
+              }
+            });
+            var hash = {};
+            rArrs = rArrs.reduce(function(item, next) {
+              hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
+              return item;
+            }, []);
+            if (rArrs.length == this.selectLeftlists.length) {
+              self.checked = true;
+            } else {
+              self.checked = false;
+            }
+          } else if (data.code == "100005") {
+            self.$message(data.msg);
+            self.$router.push({
+              path: "/login"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: msg.statusText
+          });
+        });
+    },
+    // 人员添加选中
+    lefthandleCheckedCitiesChange(index) {
+      var self = this;
+      if (this.selectLeftlists[index].type == 2) {
+        this.selectLeftlists[index].open = !this.selectLeftlists[index].open;
+        var rtArrs = [];
+        this.selectLeftlists.forEach(function(ele, ind) {
+          if (ele.open == true) {
+            rtArrs.push({
+              name: ele.name,
+              open: false,
+              parentId: ele.parentId,
+              type: ele.type,
+              id: ele.id
+            });
+          }
+        });
+        var rfArrs = [];
+        this.selectLeftlists.forEach(function(ele, ind) {
+          if (ele.type == 2) {
+            rfArrs.push({
+              name: ele.name,
+              open: false,
+              parentId: ele.parentId,
+              type: ele.type,
+              id: ele.id
+            });
+          }
+        });
+        var hashf = {};
+        rfArrs = rfArrs.reduce(function(item, next) {
+          hashf[next.id] ? "" : (hashf[next.id] = true && item.push(next));
+          return item;
+        }, []);
+        var hasht = {};
+        rtArrs = rtArrs.reduce(function(item, next) {
+          hasht[next.id] ? "" : (hasht[next.id] = true && item.push(next));
+          return item;
+        }, []);
+        if (rtArrs.length == rfArrs.length) {
+          self.checked = true;
+        } else {
+          self.checked = false;
+        }
+      } else {
+        this.$message({
+          type: "info",
+          message: "请选择人员，你现在选择的是部门!"
+        });
+      }
+    },
+    // 人员所有序号被选中时
+    numChange(event) {
+      if (event.target.checked) {
+        this.selectLeftlists.forEach(function(ele, ind) {
+          if (ele.type == 2) {
+            ele.open = true;
+          }
+        });
+      } else {
+        this.selectLeftlists.forEach(function(ele, ind) {
+          if (ele.type == 2) {
+            ele.open = false;
+          }
+        });
+      }
+      // var qOrR = true;
+      // this.selectLeftlists.forEach(function(ele, ind) {
+      //   if (ele.type == 1) {
+      //     qOrR = false;
+      //   }
+      // });
+      // if (qOrR == false) {
+      //   this.$message({
+      //     type: "info",
+      //     message: "请选择人员，你所选择的包含了部门!"
+      //   });
+      //   this.checked = false;
+      // } else {
+      //   if (event.target.checked) {
+      //     this.selectLeftlists.forEach(function(ele, ind) {
+      //       ele.open = true;
+      //     });
+      //   } else {
+      //     this.selectLeftlists.forEach(function(ele, ind) {
+      //       ele.open = false;
+      //     });
+      //   }
+      // }
+    },
+    // 人员导航选择
+    navClick(index) {
+      var self = this;
+      this.getdeptstaff({
+        oid: sessionStorage.getItem("orgId"),
+        uid: sessionStorage.getItem("userId"),
+        deptId: self.navLists[index].deptId
+      })
+        .then(data => {
+          if (data.code == "000000") {
+            var start = index + 1;
+            self.navLists.splice(start, 1);
+            self.selectLeftlists = [];
+            data.data.forEach(function(ele, ind) {
+              self.selectLeftlists.push({
+                name: ele.name,
+                open: false,
+                parentId: ele.parentId,
+                type: ele.type,
+                id: ele.id
+              });
+            });
+            self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
+              self.selectRightlists.forEach(function(eleRight, rightInd) {
+                if (eleLeft.id == eleRight.id) {
+                  self.selectLeftlists[eleLeftInd].open = true;
+                }
+              });
+            });
 
-				this.selectLeftlists.forEach(function(eleL, indL) {
-					rights.forEach(function(ele, ind) {
-					if (eleL.id === ele.id) {
-						self.selectLeftlists[indL].open = true;
-					}
-					});
-				});
-				var rtArrs = [];
-				this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.open == true) {
-					rtArrs.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-					});
-					}
-				});
-				var rfArrs = [];
-				this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.type == 2) {
-					rfArrs.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-					});
-					}
-				});
-				var hashf = {};
-				rfArrs = rfArrs.reduce(function(item, next) {
-					hashf[next.id] ? "" : (hashf[next.id] = true && item.push(next));
-					return item;
-				}, []);
-				var hasht = {};
-				rtArrs = rtArrs.reduce(function(item, next) {
-					hasht[next.id] ? "" : (hasht[next.id] = true && item.push(next));
-					return item;
-				}, []);
-				if (rtArrs.length == rfArrs.length) {
-					self.checked = true;
-				} else {
-					self.checked = false;
-				}
-				},
-			commodityLeftClick() {
-				var self = this;
-				var rArrs = [];
-				this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.open == true) {
-					self.selectRightlists.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-					});
-					}
-				});
-				var hash = {};
-				self.selectRightlists = self.selectRightlists.reduce(function(
-					item,
-					next
-				) {
-					hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
-					return item;
-				},
-				[]);
-				},
-			// 人员下一级
-			leftNextClick(index) {
-				var self = this;
-				this.getdeptstaff({
-					oid: sessionStorage.getItem("orgId"),
-					uid: sessionStorage.getItem("userId"),
-					deptId: self.selectLeftlists[index].id
-				})
-					.then(data => {
-					if (data.code == "000000") {
-						self.navLists.push({
-						name: self.selectLeftlists[index].name,
-						deptId: self.selectLeftlists[index].id
-						});
-						self.selectLeftlists = [];
-						data.data.forEach(function(ele, ind) {
-						self.selectLeftlists.push({
-							name: ele.name,
-							open: false,
-							parentId: ele.parentId,
-							type: ele.type,
-							id: ele.id
-						});
-						});
-						self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-						self.selectRightlists.forEach(function(eleRight, rightInd) {
-							if (eleLeft.id == eleRight.id) {
-							self.selectLeftlists[eleLeftInd].open = true;
-							}
-						});
-						});
-						var rArrs = [];
-						this.selectLeftlists.forEach(function(ele, ind) {
-						if (ele.open == true) {
-							rArrs.push({
-							name: ele.name,
-							open: false,
-							parentId: ele.parentId,
-							type: ele.type,
-							id: ele.id
-							});
-						}
-						});
-						var hash = {};
-						rArrs = rArrs.reduce(function(item, next) {
-						hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
-						return item;
-						}, []);
-						if (rArrs.length == this.selectLeftlists.length) {
-						self.checked = true;
-						} else {
-						self.checked = false;
-						}
-					} else if (data.code == "100005") {
-						self.$message(data.msg);
-						self.$router.push({
-						path: "/login"
-						});
-					} else {
-						this.$message({
-						type: "info",
-						message: data.msg
-						});
-					}
-					})
-					.catch(msg => {
-					if (JSON.parse(msg.bodyText).code == "188888") {
-						this.$message({
-						type: "info",
-						message: JSON.parse(msg.bodyText).msg
-						});
-						this.$router.push({
-						path: "/login"
-						});
-					} else {
-						this.$message({
-						type: "info",
-						message: data.msg
-						});
-					}
-					});
-				},
-			// 人员添加选中
-			lefthandleCheckedCitiesChange(index) {
-				var self = this;
-				if (this.selectLeftlists[index].type == 2) {
-					this.selectLeftlists[index].open = !this.selectLeftlists[index].open;
-					var rtArrs = [];
-					this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.open == true) {
-						rtArrs.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-						});
-					}
-					});
-					var rfArrs = [];
-					this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.type == 2) {
-						rfArrs.push({
-						name: ele.name,
-						open: false,
-						parentId: ele.parentId,
-						type: ele.type,
-						id: ele.id
-						});
-					}
-					});
-					var hashf = {};
-					rfArrs = rfArrs.reduce(function(item, next) {
-					hashf[next.id] ? "" : (hashf[next.id] = true && item.push(next));
-					return item;
-					}, []);
-					var hasht = {};
-					rtArrs = rtArrs.reduce(function(item, next) {
-					hasht[next.id] ? "" : (hasht[next.id] = true && item.push(next));
-					return item;
-					}, []);
-					if (rtArrs.length == rfArrs.length) {
-					self.checked = true;
-					} else {
-					self.checked = false;
-					}
-				} else {
-					this.$message({
-					type: "info",
-					message: "请选择人员，你现在选择的是部门!"
-					});
-				}
-				},
-			// 人员所有序号被选中时
-			numChange(event) {
-				if (event.target.checked) {
-					this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.type == 2) {
-						ele.open = true;
-					}
-					});
-				} else {
-					this.selectLeftlists.forEach(function(ele, ind) {
-					if (ele.type == 2) {
-						ele.open = false;
-					}
-					});
-				}
-				// var qOrR = true;
-				// this.selectLeftlists.forEach(function(ele, ind) {
-				//   if (ele.type == 1) {
-				//     qOrR = false;
-				//   }
-				// });
-				// if (qOrR == false) {
-				//   this.$message({
-				//     type: "info",
-				//     message: "请选择人员，你所选择的包含了部门!"
-				//   });
-				//   this.checked = false;
-				// } else {
-				//   if (event.target.checked) {
-				//     this.selectLeftlists.forEach(function(ele, ind) {
-				//       ele.open = true;
-				//     });
-				//   } else {
-				//     this.selectLeftlists.forEach(function(ele, ind) {
-				//       ele.open = false;
-				//     });
-				//   }
-				// }
-				},
-			// 人员导航选择
-			navClick(index) {
-				var self = this;
-				this.getdeptstaff({
-					oid: sessionStorage.getItem("orgId"),
-					uid: sessionStorage.getItem("userId"),
-					deptId: self.navLists[index].deptId
-				})
-					.then(data => {
-					if (data.code == "000000") {
-						var start = index + 1;
-						self.navLists.splice(start, 1);
-						self.selectLeftlists = [];
-						data.data.forEach(function(ele, ind) {
-						self.selectLeftlists.push({
-							name: ele.name,
-							open: false,
-							parentId: ele.parentId,
-							type: ele.type,
-							id: ele.id
-						});
-						});
-						self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-						self.selectRightlists.forEach(function(eleRight, rightInd) {
-							if (eleLeft.id == eleRight.id) {
-							self.selectLeftlists[eleLeftInd].open = true;
-							}
-						});
-						});
+            var rArrs = [];
+            this.selectLeftlists.forEach(function(ele, ind) {
+              if (ele.open == true) {
+                rArrs.push({
+                  name: ele.name,
+                  open: false,
+                  parentId: ele.parentId,
+                  type: ele.type,
+                  id: ele.id
+                });
+              }
+            });
+            var hash = {};
+            rArrs = rArrs.reduce(function(item, next) {
+              hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
+              return item;
+            }, []);
+            if (rArrs.length == this.selectLeftlists.length) {
+              self.checked = true;
+            } else {
+              self.checked = false;
+            }
+          } else if (data.code == "100005") {
+            self.$message(data.msg);
+            self.$router.push({
+              path: "/login"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: msg.statusText
+          });
+        });
+    },
+    clearSearchClick() {
+      this.searchsmemVal = "";
+    },
+    // 保存抄送人
+    saveCopy(index) {
+      let self = this;
+      let willCompile = self.itemsa[index].modelId;
+      let arr = [1, 2, 3];
+      self
+        .getapprovalcopysave({
+          modelId: willCompile,
+          userIds: JSON.stringify(arr)
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            this.$message({
+              type: "success",
+              message: "保存成功！"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: msg.statusText
+          });
+        });
+    },
 
-						var rArrs = [];
-						this.selectLeftlists.forEach(function(ele, ind) {
-						if (ele.open == true) {
-							rArrs.push({
-							name: ele.name,
-							open: false,
-							parentId: ele.parentId,
-							type: ele.type,
-							id: ele.id
-							});
-						}
-						});
-						var hash = {};
-						rArrs = rArrs.reduce(function(item, next) {
-						hash[next.id] ? "" : (hash[next.id] = true && item.push(next));
-						return item;
-						}, []);
-						if (rArrs.length == this.selectLeftlists.length) {
-						self.checked = true;
-						} else {
-						self.checked = false;
-						}
-					} else if (data.code == "100005") {
-						self.$message(data.msg);
-						self.$router.push({
-						path: "/login"
-						});
-					} else {
-						this.$message({
-						type: "info",
-						message: data.msg
-						});
-					}
-					})
-					.catch(msg => {
-					if (JSON.parse(msg.bodyText).code == "188888") {
-						this.$message({
-						type: "info",
-						message: JSON.parse(msg.bodyText).msg
-						});
-						this.$router.push({
-						path: "/login"
-						});
-					} else {
-						this.$message({
-						type: "info",
-						message:data.msg
-						});
-					}
-					});
-			},
-			clearSearchClick() {
-				this.searchsmemVal = "";
-			},
-			// 保存抄送人
-            saveCopy(index){
-				 let self = this
-				 let willCompile = self.itemsa[index].modelId
-				 let arr = [1,2,3]
-				 self.getapprovalcopysave({
-                    modelId: willCompile, 
-                    userIds:JSON.stringify(arr)
-				 }).then((data)=>{
-                         if(data.code == '000000'){
-							this.$message({
-								type:'success',
-								message:'保存成功！'
-							}) 
-						 }else{
-							this.$message({
-								type:'info',
-								message:data.msg
-							}) 
-						 }
-				 }).catch(msg=>{
-					this.$message({
-					   type:'info',
-					   message:data.msg
-				   })  
-				 })
-			},
-			
-			// 获取抄送人列表
-			recipients(index){
-			  let self = this
-			  self.ModalsShow = true
-			  let willCompile = self.itemsa[index].modelId
-			  self.copyPeople = index
-			  self.getapprovalcopyget({
-                  modelId: willCompile
-			  }).then((data)=>{
-                      if(data.code == '000000'){
-
-					  }else{
-						 this.$message({
-							type:'info',
-							message:data.msg
-						})  
-					  }
-			  }).catch(msg=>{
-				 this.$message({
-					   type:'info',
-					   message:data.msg
-				   }) 
-			  })
-			},
-			// 审批人设置
-			ApproverSettings(index){
-			   let self = this
-			   let willCompile = self.itemsa[index].modelId
-			   sessionStorage.setItem('modelId',willCompile)
-			   self.getapprovalSetItem({
-                     modelId:willCompile
-			   }).then((data)=>{
-                       if(data.code == '000000'){
-						sessionStorage.setItem('modelName',data.data.modelL.modelName)  
-						sessionStorage.setItem('setting',data.data.setting)	
-						sessionStorage.setItem('approveList',JSON.stringify(data.data.list))	
-						sessionStorage.setItem('usersArrs',JSON.stringify(data.data.users))
-						this.$router.push({
-				             path:'/home/approve/compileapprove'
-			            })
-					   }else{
-						   this.$message({
-							   type:'info',
-							   message:data.msg
-						   })
-					   }
-			   }).catch(msg=>{
-				   this.$message({
-					   type:'info',
-					   message:data.msg
-				   })
-			   })
-			   
-			},
-			addcheck: function () {
-				this.$router.push({
-					path: "/home/formDesign"
-				})
-			},
-			...mapActions(["getdeptstaff",
+    // 获取抄送人列表
+    recipients(index) {
+      let self = this;
+      self.ModalsShow = true;
+      let willCompile = self.itemsa[index].modelId;
+      self.copyPeople = index;
+      self
+        .getapprovalcopyget({
+          modelId: willCompile
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            console.log(data.data);
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: data.msg
+          });
+        });
+    },
+    // 审批人设置
+    ApproverSettings(index) {
+      let self = this;
+      let willCompile = self.itemsa[index].modelId;
+      sessionStorage.setItem("modelId", willCompile);
+      self
+        .getapprovalSetItem({
+          modelId: willCompile
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            sessionStorage.setItem("modelName", data.data.modelL.modelName);
+            sessionStorage.setItem("setting", data.data.setting);
+            sessionStorage.setItem(
+              "approveList",
+              JSON.stringify(data.data.list)
+            );
+            sessionStorage.setItem(
+              "usersArrs",
+              JSON.stringify(data.data.users)
+            );
+            this.$router.push({
+              path: "/home/approve/compileapprove"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: data.msg
+          });
+        });
+    },
+    addcheck: function() {
+      this.$router.push({
+        path: "/home/formDesign"
+      });
+    },
+    ...mapActions([
+      'getbusiness',
+      "getdeptstaff",
       "getdeptgetchild",
       "getOrgTreeList",
       "getadminsave",
       "getauthgetAllAuth",
-      "getRequestList",'getapprovalList','getapprovalSetItem','getapprovalcopyget','getapprovalcopysave'])
-		}
-		 
-	}
-
+      "getRequestList",
+      "getapprovalList",
+      "getapprovalSetItem",
+      "getapprovalcopyget",
+      "getapprovalcopysave"
+    ])
+  }
+};
 </script>
 <style scoped>
-	.addAttendance {
-		height: auto;
-		border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-		margin-left: 16px;
-		margin-right: 16px;
-		padding-top: 20px;
-		padding-bottom: 12px;
-		color: #303030;
-		font-size: 14px;
-	}
-	
-	#add {
-		border: 1px solid #E7744A;
-		color: #E7744A;
-		border-radius: 4px;
-		padding: 5px 10px;
-		cursor: pointer;
-	}
-	
-   .approveName{
-   	width: 90%;
-   	height: 40px;
-   	line-height: 40px;
-   	color: #000000;
-    font-size: 14px;
-    background-color:#F4F4F6;
-    margin-left: 16px;
-    margin-top: 10px;
-   }
-   .approveName span:nth-child(1){
-   	margin-left: 20px;
-   	float: left;
-   }
-   .approveName span:nth-child(2){
-   	margin-left: 180px;
-   }
-   .approveName span:nth-child(3){
-   	margin-right: 180px;
-   	float: right;
-   }
-   .uloas > li {
-   	width: 90%;
-   	height: 40px;
-   	border-bottom: 1px solid #CCCCCC;
-   	margin-left: 16px;
-   	line-height: 40px;
-   	color: #000000;
-   	font-size: 12px;
-   }
-   .uloas li div{
-   	display: inline-block;
-   }
-  .uloas li div:nth-child(2){
-  	display: inline-block;
-  	float: right;
-  	margin-right: 20px;
-  	color: #E7744A;
-  	cursor: pointer;
-  }
-  .uloas li div:nth-child(1){
-  	padding-left: 20px;
-  }
-  .uloas li div:nth-child(2) span {
-  	margin-left: 4px;
-  }
-   /*成员弹出*/
+.addAttendance {
+  height: auto;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  margin-left: 16px;
+  margin-right: 16px;
+  padding-top: 20px;
+  padding-bottom: 12px;
+  color: #303030;
+  font-size: 14px;
+}
+
+#add {
+  border: 1px solid #e7744a;
+  color: #e7744a;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.approveName {
+  width: 90%;
+  height: 40px;
+  line-height: 40px;
+  color: #000000;
+  font-size: 14px;
+  background-color: #f4f4f6;
+  margin-left: 16px;
+  margin-top: 10px;
+}
+.approveName span:nth-child(1) {
+  margin-left: 20px;
+  float: left;
+}
+.approveName span:nth-child(2) {
+  margin-left: 180px;
+}
+.approveName span:nth-child(3) {
+  margin-right: 180px;
+  float: right;
+}
+.uloas > li {
+  width: 90%;
+  height: 40px;
+  border-bottom: 1px solid #cccccc;
+  margin-left: 16px;
+  line-height: 40px;
+  color: #000000;
+  font-size: 12px;
+}
+.uloas li div {
+  display: inline-block;
+}
+.uloas li div:nth-child(2) {
+  display: inline-block;
+  float: right;
+  margin-right: 20px;
+  color: #e7744a;
+  cursor: pointer;
+}
+.uloas li div:nth-child(1) {
+  padding-left: 20px;
+}
+.uloas li div:nth-child(2) span {
+  margin-left: 4px;
+}
+/*成员弹出*/
 
 .centerCenter > div {
   width: 30px;
@@ -1481,5 +1397,4 @@
   background-color: rgba(255, 255, 255, 0.1);
   z-index: 9999;
 }
-
 </style>

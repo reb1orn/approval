@@ -82,7 +82,7 @@ export default {
           self.isSadeNacClo_1 = ind;
         }
       });
-      if (psthStr == "team" || psthStr == "excelUpload") {
+      if (psthStr == "team" || psthStr == "excelUpload" || psthStr == 'approve' || psthStr == 'notice' || psthStr == 'message') {
         self.isSadeNacClo = sessionStorage.getItem("myindex");
         self.isSadeNacClo_1 = sessionStorage.getItem("myindex");
       }

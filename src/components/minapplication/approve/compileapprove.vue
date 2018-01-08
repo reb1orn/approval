@@ -34,20 +34,21 @@
 					</div>
 					<!-- <img :src=arrows alt="" id="arrows"> -->
 					<div class='operation'>
-						<span  @click='emptyData()'>清空</span>
-					    <span @click='settings()'>设置</span>	
+						<span  @click='unApprovalempty()'>清空</span>
+					    <span @click='unApprovalsettings()'>设置</span>	
 					</div>		 		
 				</div>
 				<!-- 分条件审批 -->
 				<div class='onconditional' v-show='separabilityConditional ' v-for='(item,index) in approveList' :key='index'>
 					<div class="conditionTitle" :class='{conditionTitleColor:item.enabled == 1}' >当"{{item.content}}"时</div>
-                    <div class='addApprover' v-show='item.userVo.length !==0' v-for='(itemsa,index) in item.userVo' :key='index' >
-											<div>
+                    <div class='addApproverPeople' v-show='item.userVo.length !==0' v-for='(itemsa,index) in item.userVo' :key='index' >
+											<div class="addImgArrow">
 												<img :src=approvalImg alt="">	
 											</div>
 												<div>
-													<p @click='addApprovars(index)'>{{itemsa.userNick}}</p>
+													<p >{{itemsa.userNick}}</p>
 											</div>
+                      <img :src=arrows alt="" id="arrows">
 										</div>		 
                     <div class="unApprovalas" v-show='item.userVo.length ==0 '>
 												<div>
@@ -59,7 +60,7 @@
 										</div>      
 					<div class='operation'>
 					    <span @click='deleteApprovalCondition(index)' v-show='item.enabled == 0'>删除</span>	
-						<span  @click='emptyData(index)' v-show='item.enabled == 1'>清空</span>
+              <span  @click='emptyData(index)' v-show='item.enabled == 1'>清空</span>
 					    <span @click='settings(index)' v-show='item.enabled == 1'>设置</span>	
 					</div>
 				</div>	
@@ -222,7 +223,8 @@
 			   <div class="selectApprovalTop">设置审批条件
 				   <!-- <p class='onlyOne'>只能指定一个组件为审批条件</p> -->
 			   </div>
-			   <div class="conditionContant">
+         <div class="unConditionContant" v-show="unConditionContant">暂无审批条件</div>
+			   <div class="conditionContant" v-show='conditionContant'>
 				   <el-radio-group v-model="radioCondition" @change="radioConditionSelet()">
 						<el-radio :label='3' >请假类型</el-radio>
 						<el-radio :label='6' >请假天数</el-radio>						
@@ -235,8 +237,8 @@
 						    </ul>	
 					</div>
 					<div class="counterNumber" v-show="counterNumber">
-					       <input v-model="period" type="number" />	
-						   <img :src=exampleImg  alt="">
+					      <input v-model="period" type="number" />	
+						    <img :src=exampleImg  alt="">
 					</div>	
 			   </div>
                <div class="selectApprovalBot">
@@ -254,6 +256,8 @@ export default {
   name: "set",
   data() {
     return {
+      conditionContant:false,
+      unConditionContant:false,
       ModalsShow: false,
       searchsmemVal: "",
       ztreeData: [],
@@ -301,11 +305,44 @@ export default {
       selectLeftlists: [],
       selectRightlists: [],
       counter: 0,
-      conditions: ""
+      conditions: "",
+      fields:''
     };
   },
 
   created: function() {
+     // 若此人中途无权限，则跳到登录页
+    this.getbusiness({
+      oid: sessionStorage.getItem("orgId"),
+      uid: sessionStorage.getItem("userId")
+    })
+      .then(data => {
+        if(data.code == "100005"){
+          this.$message({
+            type: "info",
+            message: '对不起，没有权限'
+          });
+          this.$router.push({
+            path:'/login'
+          })
+        }
+      })
+      .catch(msg => {
+        if (JSON.parse(msg.bodyText).code == "188888") {
+          this.$message({
+            type: "info",
+            message: JSON.parse(msg.bodyText).msg
+          });
+          this.$router.push({
+            path: "/login"
+          });
+        } else {
+          this.$message({
+            type: "info",
+            message: "服务器错误!"
+          });
+        }
+      });
     this.listFun();
     this.modelId = sessionStorage.getItem("modelId");
     this.modelName = sessionStorage.getItem("modelName");
@@ -320,7 +357,7 @@ export default {
       this.radio2 = 2;
     }
     this.radioSelet();
-    this.companyList();
+    // this.companyList();
     this.radioConditionSelet();
   },
   watch: {
@@ -349,9 +386,9 @@ export default {
     // 		   }
     // 	   }).catch(msg=>{
     // 		   this.$message({
-    // 			   type:'info',
-    // 			   message:data.msg
-    // 		   })
+								// type: "info",
+								// message: msg.statusText
+							// });
     // 	   })
     // 	}else if(self.radio2 == 0){
     // 	  self.unconditional = true
@@ -376,9 +413,9 @@ export default {
     // 		   }
     // 	   }).catch(msg=>{
     // 		   this.$message({
-    // 			   type:'info',
-    // 			   message:data.msg
-    // 		   })
+							// 	type: "info",
+							// 	message: msg.statusText
+							// });
     // 	   })
     // 	}else if(self.radio2 == 1){
     // 		self.unconditional = false
@@ -402,10 +439,10 @@ export default {
     // 			   })
     // 		   }
     // 	   }).catch(msg=>{
-    // 		   this.$message({
-    // 			   type:'info',
-    // 			   message:data.msg
-    // 		   })
+              // this.$message({
+							// 	type: "info",
+							// 	message: msg.statusText
+							// });
     // 	   })
     // 	}
 
@@ -431,197 +468,95 @@ export default {
       });
     },
     listFun() {
-      var self = this;
-      self.sBelectLeftlists = [];
-      self.selectLeftlists = [];
-      self.navLists = [];
-      self.nBavLists = [];
-      self.checked = false;
-      // 查询人员列表
-      this.getdeptstaff({
-        oid: sessionStorage.getItem("orgId"),
-        uid: sessionStorage.getItem("userId"),
-        deptId: ""
-      })
-        .then(data => {
-          if (data.code == "000000") {
-            self.navLists.push({ name: data.data.name, deptId: data.data.id });
-            self.nBavLists.push({ name: data.data.name, deptId: data.data.id });
-            this.getdeptstaff({
-              oid: sessionStorage.getItem("orgId"),
-              uid: sessionStorage.getItem("userId"),
-              deptId: self.navLists[0].deptId
-            })
-              .then(data => {
-                if (data.code == "000000") {
-                  data.data.forEach(function(ele, ind) {
-                    self.selectLeftlists.push({
-                      name: ele.name,
-                      open: false,
-                      parentId: ele.parentId,
-                      type: ele.type,
-                      id: ele.id
-                    });
-                  });
-                  self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-                    self.selectRightlists.forEach(function(eleRight, rightInd) {
-                      if (eleLeft.id == eleRight.id) {
-                        self.selectLeftlists[eleLeftInd].open = true;
-                      }
-                    });
-                  });
-                  var rArrs = [];
-                  this.selectLeftlists.forEach(function(ele, ind) {
-                    if (ele.open == true) {
-                      rArrs.push({
-                        name: ele.name,
-                        open: false,
-                        parentId: ele.parentId,
-                        type: ele.type,
-                        id: ele.id
-                      });
-                    }
-                  });
-                  var hash = {};
-                  rArrs = rArrs.reduce(function(item, next) {
-                    hash[next.id]
-                      ? ""
-                      : (hash[next.id] = true && item.push(next));
-                    return item;
-                  }, []);
-                  if (rArrs.length == this.selectLeftlists.length) {
-                    self.checked = true;
-                  } else {
-                    self.checked = false;
-                  }
-                } else if (data.code == "100005") {
-                  self.$message(data.msg);
-                  self.$router.push({
-                    path: "/login"
-                  });
-                } else {
-                  this.$message({
-                    type: "info",
-                    message: data.msg
-                  });
-                }
-              })
-              .catch(msg => {
-                if (JSON.parse(msg.bodyText).code == "188888") {
-                  this.$message({
-                    type: "info",
-                    message: JSON.parse(msg.bodyText).msg
-                  });
-                  this.$router.push({
-                    path: "/login"
-                  });
-                } else {
-                  this.$message({
-                    type: "info",
-                    message: data.msg
-                  });
-                }
-              });
-            this.getdeptstaff({
-              oid: sessionStorage.getItem("orgId"),
-              uid: sessionStorage.getItem("userId"),
-              deptId: self.nBavLists[0].deptId
-            })
-              .then(data => {
-                if (data.code == "000000") {
-                  data.data.forEach(function(ele, ind) {
-                    if (ele.type == 1) {
-                      self.sBelectLeftlists.push({
-                        name: ele.name,
-                        open: false,
-                        parentId: ele.parentId,
-                        type: ele.type,
-                        id: ele.id
-                      });
-                    }
-                  });
-                  self.sBelectLeftlists.forEach(function(eleLeft, eleLeftInd) {
-                    self.sBelectRightlists.forEach(function(
-                      eleRight,
-                      rightInd
-                    ) {
-                      if (eleLeft.id == eleRight.id) {
-                        self.sBelectLeftlists[eleLeftInd].open = true;
-                      }
-                    });
-                  });
-                  var rbArrs = [];
-                  this.sBelectLeftlists.forEach(function(ele, ind) {
-                    if (ele.open == true) {
-                      rbArrs.push({
-                        name: ele.name,
-                        open: false,
-                        parentId: ele.parentId,
-                        type: ele.type,
-                        id: ele.id
-                      });
-                    }
-                  });
-                  var hash = {};
-                  rbArrs = rbArrs.reduce(function(item, next) {
-                    hash[next.id]
-                      ? ""
-                      : (hash[next.id] = true && item.push(next));
-                    return item;
-                  }, []);
-                  if (rbArrs.length == this.sBelectLeftlists.length) {
-                    self.cBhecked = true;
-                  } else {
-                    self.cBhecked = false;
-                  }
-                } else if (data.code == "100005") {
-                  self.$message(data.msg);
-                  self.$router.push({
-                    path: "/login"
-                  });
-                } else {
-                  this.$message({
-                    type: "info",
-                    message: data.msg
-                  });
-                }
-              })
-              .catch(msg => {
-                this.$message({
-                  type: "info",
-                  message: data.msg
-                });
-              });
-          } else if (data.code == "100005") {
-            self.$message(data.msg);
-            self.$router.push({
-              path: "/login"
-            });
-          } else {
-            this.$message({
-              type: "info",
-              message: data.msg
-            });
-          }
-        })
-        .catch(msg => {
-          if (JSON.parse(msg.bodyText).code == "188888") {
-            this.$message({
-              type: "info",
-              message: JSON.parse(msg.bodyText).msg
-            });
-            this.$router.push({
-              path: "/login"
-            });
-          } else {
-            this.$message({
-              type: "info",
-              message: data.msg
-            });
-          }
-        });
-      self.xiaLists = [];
-    },
+					var self = this;
+					self.sBelectLeftlists = [];
+					self.selectLeftlists = [];
+					self.navLists = [];
+					self.nBavLists = [];
+					self.checked = false;
+					// 查询人员列表
+					this.getdeptstaff({
+						oid: sessionStorage.getItem("orgId"),
+						uid: sessionStorage.getItem("userId"),
+						deptId: ""
+					})
+						.then(data => {
+						if (data.code == "000000") {
+							self.navLists.push({ name: data.data.name, deptId: data.data.id });
+							self.nBavLists.push({ name: data.data.name, deptId: data.data.id });
+							this.getdeptstaff({
+							oid: sessionStorage.getItem("orgId"),
+							uid: sessionStorage.getItem("userId"),
+							deptId: self.navLists[0].deptId
+							})
+							.then(data => {
+								if (data.code == "000000") {
+								data.data.forEach(function(ele, ind) {
+									self.selectLeftlists.push({
+									name: ele.name,
+									open: false,
+									parentId: ele.parentId,
+									type: ele.type,
+									id: ele.id
+									});
+								});
+								self.selectLeftlists.forEach(function(eleLeft, eleLeftInd) {
+									self.selectRightlists.forEach(function(eleRight, rightInd) {
+									if (eleLeft.id == eleRight.id) {
+										self.selectLeftlists[eleLeftInd].open = true;
+									}
+									});
+								});
+								var rArrs = [];
+								this.selectLeftlists.forEach(function(ele, ind) {
+									if (ele.open == true) {
+									rArrs.push({
+										name: ele.name,
+										open: false,
+										parentId: ele.parentId,
+										type: ele.type,
+										id: ele.id
+									});
+									}
+								});
+								var hash = {};
+								rArrs = rArrs.reduce(function(item, next) {
+									hash[next.id]
+									? ""
+									: (hash[next.id] = true && item.push(next));
+									return item;
+								}, []);
+								if (rArrs.length == this.selectLeftlists.length) {
+									self.checked = true;
+								} else {
+									self.checked = false;
+								}
+								} else if (data.code == "100005") {
+								self.$message(data.msg);
+								self.$router.push({
+									path: "/login"
+								});
+								} else {
+							
+								}
+							})
+							.catch(msg => {
+									this.$message({
+										type: "info",
+										message: msg.statusText
+									});
+							});
+				
+						} 
+						})
+						.catch(msg => {
+							this.$message({
+								type: "info",
+								message: msg.statusText
+							});
+						});
+					self.xiaLists = [];
+				},
     // 选择成员弹出框取消
     cancelClick() {
       var self = this;
@@ -672,14 +607,31 @@ export default {
       }
       this.selectMembersVal = val;
       self.counter = 0;
-      self
-        .getapprovalupdateProcess({
+      if(self.conditions !== undefined ){
+        self.getapprovalupdateProcess({
           modelId: self.modelId,
           conditionId: self.approveList[self.conditions].conditions,
           userArray: self.uidsVal
         })
         .then(data => {
           if (data.code == "000000") {
+            self.getapprovalSetItem({
+             modelId:self.modelId 
+            }).then((data)=>{
+              if(data.code == '000000'){
+               self.approveList = data.data.list
+              }else{
+                this.$message({
+                  type: "info",
+                  message: data.msg
+                }); 
+              }
+            }).catch(msg=>{
+              this.$message({
+								type: "info",
+								message: msg.statusText
+							}); 
+            })
             this.$message({
               type: "success",
               message: "设置成功！"
@@ -693,10 +645,56 @@ export default {
         })
         .catch(msg => {
           this.$message({
-            type: "info",
-            message: data.msg
-          });
+								type: "info",
+								message: msg.statusText
+							});
         });
+      }else if(self.conditions == undefined ){
+        self.getapprovalupdateProcess({
+          modelId: self.modelId,
+          conditionId: '',
+          userArray: self.uidsVal
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            self.getapprovalSetItem({
+             modelId:self.modelId 
+            }).then((data)=>{
+              if(data.code == '000000'){
+               self.usersArrs = data.data.users
+               self.unApproval = false
+               self.addApprovar = true
+              }else{
+                this.$message({
+                  type: "info",
+                  message: data.msg
+                }); 
+              }
+            }).catch(msg=>{
+              this.$message({
+								type: "info",
+								message: msg.statusText
+							}); 
+            })
+            this.$message({
+              type: "success",
+              message: "设置成功！"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
+        });
+      }
+      
     },
     righthandleCheckedCitiesChange(index) {
       var self = this;
@@ -871,20 +869,10 @@ export default {
           }
         })
         .catch(msg => {
-          if (JSON.parse(msg.bodyText).code == "188888") {
-            this.$message({
-              type: "info",
-              message: JSON.parse(msg.bodyText).msg
-            });
-            this.$router.push({
-              path: "/login"
-            });
-          } else {
-            this.$message({
-              type: "info",
-              message: date.msg
-            });
-          }
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
     // 人员添加选中
@@ -1042,20 +1030,10 @@ export default {
           }
         })
         .catch(msg => {
-          if (JSON.parse(msg.bodyText).code == "188888") {
-            this.$message({
-              type: "info",
-              message: JSON.parse(msg.bodyText).msg
-            });
-            this.$router.push({
-              path: "/login"
-            });
-          } else {
-            this.$message({
-              type: "info",
-              message: data.msg
-            });
-          }
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
     clearSearchClick() {
@@ -1080,6 +1058,7 @@ export default {
     conditionAbolish() {
       let self = this;
       self.conditionApprovalMaskLayer = false;
+      self.period = ''
     },
     // 设置审批条件
     settingCondition() {},
@@ -1115,7 +1094,7 @@ export default {
           if (data.code == "000000") {
             this.$message({
               type: "success",
-              message: data.msg
+              message: '删除成功！'
             });
             self
               .getapprovalSetItem({
@@ -1133,9 +1112,9 @@ export default {
               })
               .catch(msg => {
                 this.$message({
-                  type: "info",
-                  message: data.msg
-                });
+								type: "info",
+								message: msg.statusText
+							});
               });
           } else {
             this.$message({
@@ -1146,23 +1125,23 @@ export default {
         })
         .catch(msg => {
           this.$message({
-            type: "info",
-            message: data.msg
-          });
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
     // 保存审批条件
     saveApprovalCondition() {
       let self = this;
-      self
-        .getapprovalcdnsave({
+      if(self.radioCondition == '3'){
+        self.getapprovalcdnsave({
           modelId: self.modelId,
           field: self.field
           //  numbers:
         })
-        .then(data => {
+        .then((data) => {
           if (data.code == "000000") {
-            self.approveList = JSON.parse(JSON.stringify(data.data));
+            self.approveList = JSON.parse(JSON.stringify(data.data))
             self.conditionApprovalMaskLayer = false;
           } else {
             this.$message({
@@ -1173,23 +1152,20 @@ export default {
         })
         .catch(msg => {
           this.$message({
-            type: "info",
-            message: data.msg
-          });
+								type: "info",
+								message: msg.statusText
+							});
         });
-    },
-    // 获取审批条件
-    getApprovalCondition() {
-      let self = this;
-      self.conditionApprovalMaskLayer = true;
-      self
-        .getapprovalcdnget({
-          modelId: self.modelId
+      }else if(self.radioCondition == '6'){
+       self.getapprovalcdnsave({
+          modelId: self.modelId,
+          field: self.fields,
+          numbers:self.period
         })
-        .then(data => {
+        .then((data) => {
           if (data.code == "000000") {
-            self.items = data.data[0].optValue.split(",");
-            self.field = data.data[0].field;
+            self.approveList = JSON.parse(JSON.stringify(data.data))
+            self.conditionApprovalMaskLayer = false;
           } else {
             this.$message({
               type: "info",
@@ -1199,9 +1175,48 @@ export default {
         })
         .catch(msg => {
           this.$message({
-            type: "info",
-            message: data.msg
-          });
+								type: "info",
+								message: msg.statusText
+							});
+        }); 
+        self.period = ''
+      }
+      
+      
+
+    },
+    // 获取审批条件
+    getApprovalCondition() {
+      let self = this;
+      self.conditionApprovalMaskLayer = true;
+      self.getapprovalcdnget({
+          modelId: self.modelId
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            // data.data = JSON.parse(JSON.stringify(data.data))
+            if(data.data.length == 0){
+              self.unConditionContant = true
+              self.conditionContant = false
+            }else{
+            self.unConditionContant = false
+            self.conditionContant = true
+              self.items = data.data[0].optValue.split(",");
+              self.field = data.data[0].field;
+              self.fields = data.data[1].field
+            }
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
     // 获取公司部门信息
@@ -1224,19 +1239,18 @@ export default {
           }
         })
         .catch(msg => {
-          this.$message({
-            type: "info",
-            message: data.msg
-          });
+         this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
-    // 清空审批流程
-    emptyData(index) {
+    // 不分条件审批-清空审批流程
+    unApprovalempty(){
       let self = this;
-      self
-        .getapprovaldeleteProcess({
+      self.getapprovaldeleteProcess({
           modelId: self.modelId,
-          conditionId: self.approveList[index].conditions
+          conditionId: ''
         })
         .then(data => {
           if (data.code == "000000") {
@@ -1255,9 +1269,53 @@ export default {
         })
         .catch(msg => {
           this.$message({
-            type: "info",
-            message: data.msg
-          });
+								type: "info",
+								message: msg.statusText
+							});
+        }); 
+    },
+    // 分条件-清空审批流程
+    emptyData(index) {
+      let self = this;
+      self.getapprovaldeleteProcess({
+          modelId: self.modelId,
+          conditionId: self.approveList[index].conditions
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            self.getapprovalSetItem({
+             modelId:self.modelId 
+            }).then((data)=>{
+              if(data.code == '000000'){
+               self.approveList = data.data.list
+              }else{
+                this.$message({
+                  type: "info",
+                  message: data.msg
+                }); 
+              }
+            }).catch(msg=>{
+              this.$message({
+								type: "info",
+								message: msg.statusText
+							}); 
+            })
+            this.$message({
+              type: "success",
+              message: "清空成功！"
+            });
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
     // 保存审批流程
@@ -1284,15 +1342,20 @@ export default {
           }
         })
         .catch(msg => {
-          this.$message({
-            type: "info",
-            message: data.msg
-          });
+         this.$message({
+								type: "info",
+								message: msg.statusText
+							});
         });
     },
+    unApprovalsettings(){
+      let self = this
+      self.ModalsShow = true;
+    },
     // 设置审批流程
-    settings() {
+    settings(index) {
       let self = this;
+      self.conditions = index
       self.ModalsShow = true;
     },
     // 选择单选按钮，发送设置项
@@ -1318,9 +1381,9 @@ export default {
           })
           .catch(msg => {
             this.$message({
-              type: "info",
-              message: data.msg
-            });
+								type: "info",
+								message: msg.statusText
+							});
           });
       } else if (self.radio2 == 0) {
         self.setApproval = false;
@@ -1350,9 +1413,9 @@ export default {
           })
           .catch(msg => {
             this.$message({
-              type: "info",
-              message: data.msg
-            });
+								type: "info",
+								message: msg.statusText
+							});
           });
       } else if (self.radio2 == 1) {
         self.separabilityConditional = true;
@@ -1374,14 +1437,16 @@ export default {
           })
           .catch(msg => {
             this.$message({
-              type: "info",
-              message: data.msg
-            });
+								type: "info",
+								message: msg.statusText
+							});
           });
       }
     },
 
     ...mapActions([
+      'getbusiness',
+      'getapprovalSetItem',
       "getdeptstaff",
       "getdeptgetchild",
       "getOrgTreeList",
@@ -1404,6 +1469,27 @@ export default {
 };
 </script>
 <style scoped>
+.unConditionContant{
+  width: 100%;
+  height: 410px;
+  text-align: center;
+  line-height: 410px;
+  color: #303030;
+  font-size: 20px;
+}
+.addApproverPeople{
+  float: left;
+  margin-left: 40px;
+  margin-top: 40px;
+}
+.addApproverPeople img{
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+.addApproverPeople p{
+  margin-top: 10px;
+}
 .conditionTitle {
   height: 50px;
   width: 100%;
@@ -1633,6 +1719,7 @@ export default {
   margin-top: 20px;
   margin-left: 10px;
   position: relative;
+  overflow-y: scroll;
 }
 .addApprover,
 .unApproval {
@@ -1686,8 +1773,11 @@ export default {
   color: #e7744a;
 }
 #arrows {
-  display: inline-block;
-  margin-top: -80px;
+  width: 48px;
+  height: 30px;
+  margin-left: 70px;
+  margin-right: -20px;
+  margin-top: -140px
 }
 .unApproval ::before {
   content: url("../../../../static/img/arrows.png");
@@ -1704,7 +1794,7 @@ export default {
 .operation {
   position: absolute;
   right: 10px;
-  bottom: 10px;
+  top: 20px;
   color: #e7744a;
   font-size: 14px;
 }
@@ -1714,6 +1804,9 @@ export default {
 }
 .operation :nth-child(2) {
   margin-right: 10px;
+  cursor: pointer;
+}
+.operation :nth-child(3) {
   cursor: pointer;
 }
 /*成员弹出*/

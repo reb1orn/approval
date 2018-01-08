@@ -32,6 +32,10 @@ export default [
         redirect: '/home/notice/sendNotice'
     },
     {
+        path: '/home/message',
+        redirect: '/home/message/consulting'
+    },
+    {
         path: '/home/log',
         redirect: '/home/log/logManage'
     },
@@ -226,6 +230,39 @@ export default [
                 // },
             ]
         },
+        // 资讯
+        {
+            path: 'message',
+            component: function (resolve) {
+                require(['./components/minapplication/message/message.vue'], resolve)
+            },
+            children: [
+                {
+                    path: 'consulting',
+                    component: function (resolve) {
+                        require(['./components/minapplication/message/consulting.vue'], resolve)
+                    }
+                },
+                {
+                    path: 'induction',
+                    component: function (resolve) {
+                        require(['./components/minapplication/message/induction.vue'], resolve)
+                    }
+                },
+                        {
+                    path: 'onJob',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/onJob.vue'], resolve)
+                }
+                },
+                {
+                    path: 'regime',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/regime.vue'], resolve)
+                }
+                },
+            ]
+        }, 
         // 日志
         {
             path: 'log',

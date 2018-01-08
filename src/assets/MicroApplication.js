@@ -34,6 +34,8 @@ const microApplication = {
             }
         })
     },
+
+//    ******************** 审批模块 *************************
     // 审批列表
     approvalList:function approvalList(ip,postdata){
         var ipstr = ip + '?oid=' + postdata.oid +'&access_token=' + postdata.access_token
@@ -146,6 +148,27 @@ const microApplication = {
             }
         })
     },
+//    **************************** 资讯模块 ******************************
+    // 获取侧导航栏目
+    columnGet:function columnGet(ip,postdata){
+        return Vue.http.post(ip,postdata).then(response => {
+            if(response.status == 200){
+                return Promise.resolve(response.body)
+            }else{
+                return Promise.reject(response.data.message)
+            }
+        })
+    }, 
+    // 获取所有内容列表
+    contentGet:function contentGet(ip,postdata){
+        return Vue.http.post(ip,postdata).then(response => {
+            if(response.status == 200){
+                return Promise.resolve(response.body)
+            }else{
+                return Promise.reject(response.data.message)
+            }
+        })
+    }, 
 }
 export default microApplication
 // module.exports = companyset

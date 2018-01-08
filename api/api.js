@@ -17,11 +17,15 @@ global.Imgport = '18189'
 global.uploadIp = 'image.botong.tech'
 
 // 微应用
-global.minIp = '192.168.10.66'
-global.minport = '8080'
+global.minIp = '192.168.1.94'
+global.minport = '18189'
 // 审批模块
-global.approveIp = '192.168.10.66'
-global.approvePort = '8081'
+global.approveIp = '192.168.1.94'
+global.approvePort = '18189'
+// 资讯模块
+global.messageIp = '192.168.10.66'
+global.messagePort = '8083'
+
 
 // **********接口路径***********
 // 注销登录
@@ -159,33 +163,43 @@ global.RequestOnlyPeopleListPath = '/api-org/dept/user/findDeptRootUserList'
 // *************** 微应用模块 ****************
 
 // 微应用列表
-global.appIndexPath = '/app/index'
+global.appIndexPath = '/api-org/app/index'
 // 微应用编辑排序
-global.appSortPath = '/app/sort'
+global.appSortPath = '/api-org/app/sort'
+
+// *******************审批模块********************
 
 // 审批列表
-global.approvalListPath = '/approval/list'
+global.approvalListPath = '/api-approval/approval/list'
 // 获取审批设置项
-global.approvalSetItemPath = '/approval/getSetItem'
+global.approvalSetItemPath = '/api-approval/approval/getSetItem'
 // 保存审批设置项
-global.approvalsaveSetItemPath = '/approval/saveSetItem'
+global.approvalsaveSetItemPath = '/api-approval/approval/saveSetItem'
 // 设置审批流程
-global.approvalUpdateProcessPath = '/approval/updateProcess'
+global.approvalUpdateProcessPath = '/api-approval/approval/updateProcess'
 // 清空审批流程
-global.approvalDeleteProcessPath = '/approval/deleteProcess'
+global.approvalDeleteProcessPath = '/api-approval/approval/deleteProcess'
 // 获取抄送人
-global.approvalCopygetPath = '/approval/copy/get'
+global.approvalCopygetPath = '/api-approval/approval/copy/get'
 // 保存抄送人
-global.approvalCopysavePath = '/approval/copy/save'
+global.approvalCopysavePath = '/api-approval/approval/copy/save'
 // 获取审批条件
-global.approvalcdngetPath = '/approval/cdn/get'
+global.approvalcdngetPath = '/api-approval/approval/cdn/get'
 // 保存审批条件
-global.approvalcdnsavePath = '/approval/cdn/save'
+global.approvalcdnsavePath = '/api-approval/approval/cdn/save'
 // 删除审批条件
-global.approvalcdndeletePath = '/approval/cdn/delete'
+global.approvalcdndeletePath = '/api-approval/approval/cdn/delete'
 // 获取人员列表及头像
-global.deptGetOrgTreeAndUserPath = '/dept/getOrgTreeAndUser'
+global.deptGetOrgTreeAndUserPath = '/api-approval/dept/getOrgTreeAndUser'
+
+// **********************资讯模块********************
+
+// 获取栏目
+global.columnGetPath = '/column/get'
+// 获取所有内容列表
+global.contentGetPath = '/content/get'
 
 
 // *********************员工数据**********************
-global.employeeNumberPath = '/employee/get'
+global.employeeNumberPath = '/api-org/employee/get'
+

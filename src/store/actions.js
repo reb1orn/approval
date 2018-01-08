@@ -291,6 +291,8 @@ export default {
     getmicroApplicationListSort ({},postdata){
         return microApplication.microApplicationListSort(global.appSortPath,postdata)
     },
+                    
+                       //  ***************审批模块*******************
     // 审批列表
     getapprovalList ({},postdata){
         return microApplication.approvalList(global.approvalListPath,postdata)
@@ -334,7 +336,18 @@ export default {
     // 获取人员列表及头像
     getdeptGetOrgTreeAndUser ({},postdata){
         return microApplication.deptGetOrgTreeAndUser(global.deptGetOrgTreeAndUserPath,postdata)
+    },
+
+    // ********************* 资讯模块 ************************
+    
+    // 获取侧导航栏目
+    getcolumnGet ({},postdata){
+        return microApplication.columnGet(global.columnGetPath,postdata)
     }, 
+    // 获取所有内容列表
+    getcontentGet({},postdata){
+        return microApplication.contentGet(global.contentGetPath,postdata)
+    },  
         // ***********************员工数据************************
     getemployeeNumber ({},postdata){
         return microApplication.employeeNumber(global.employeeNumberPath,postdata)

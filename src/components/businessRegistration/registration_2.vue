@@ -222,7 +222,7 @@ export default {
                     clearInterval(timer);
                     self.timeTrue = false;
                   }
-                }, 1000);
+                }, 2000);
                 this.$router.push({
                   path: "/registration_3"
                 });

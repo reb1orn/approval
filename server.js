@@ -28,6 +28,7 @@ var proxyTable = {
         target:   global.ip ,
         changeOrigin: true,
     },
+
     '/app': {
         target:  global.minIp + ':' + global.minport,
         changeOrigin: true,
