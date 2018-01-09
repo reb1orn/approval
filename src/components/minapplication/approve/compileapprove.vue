@@ -23,6 +23,7 @@
 					     <div>
 							 <p @click='addApprovars()'>{{item.userNick}}</p>
 					     </div>		 
+               <img :src=arrows alt="" id="arrows" v-show="!(index == usersArrs.length -1) ">
 					</div>		 
                     <div class="unApproval" v-show='unApproval'>
 						<div>
@@ -45,10 +46,10 @@
 											<div class="addImgArrow">
 												<img :src=approvalImg alt="">	
 											</div>
-												<div>
+                      <div>
 													<p >{{itemsa.userNick}}</p>
 											</div>
-                      <img :src=arrows alt="" id="arrows">
+                      <img :src=arrows alt="" id="arrows" v-show="!(index == item.userVo.length -1) ">
 										</div>		 
                     <div class="unApprovalas" v-show='item.userVo.length ==0 '>
 												<div>
@@ -107,10 +108,10 @@
               </div>
               <div class="centerLeftBotThr">
                 <div>
-                  <!-- <el-checkbox v-model="checked" @change="numChange"></el-checkbox> -->
+                  <el-checkbox v-model="checked" @change="numChange"></el-checkbox>
                 </div>
                 <div>
-                  <!-- <span>全选</span> -->
+                  <span>全选</span>
                 </div>
               </div>
               <div class="centerLeftBotFour">
@@ -1488,6 +1489,8 @@ export default {
   border-radius: 50%;
 }
 .addApproverPeople p{
+  width: 64px;
+  text-align: center;
   margin-top: 10px;
 }
 .conditionTitle {
@@ -1727,7 +1730,9 @@ export default {
   height: 100%;
   float: left;
   position: relative;
-  margin: 40px 40px;
+  /* margin: 40px 40px; */
+  margin-left: 40px;
+  margin-top: 40px;
 }
 .unApprovalas {
   width: 100px;
@@ -1757,7 +1762,9 @@ export default {
 	  margin-left: 6px;
   } */
 .addApprover > div > p {
-  margin-left: 10px;
+  width: 64px;
+  text-align: center;
+  /* margin-left: 10px; */
   margin-top: 10px;
 }
 .unApproval > div > p {
@@ -1779,18 +1786,18 @@ export default {
   margin-right: -20px;
   margin-top: -140px
 }
-.unApproval ::before {
+/* .unApproval ::before {
   content: url("../../../../static/img/arrows.png");
   position: absolute;
   left: 100px;
   top: 20px;
-}
-.addApprover::before {
+} */
+/* .addApprover::before {
   content: url("../../../../static/img/arrows.png");
   position: absolute;
   left: 100px;
   top: 20px;
-}
+} */
 .operation {
   position: absolute;
   right: 10px;

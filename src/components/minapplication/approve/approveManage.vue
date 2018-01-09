@@ -66,10 +66,10 @@
               </div>
               <div class="centerLeftBotThr">
                 <div>
-                  <!-- <el-checkbox v-model="checked" @change="numChange"></el-checkbox> -->
+                  <el-checkbox v-model="checked" @change="numChange"></el-checkbox>
                 </div>
                 <div>
-                  <!-- <span>全选</span> -->
+                  <span>全选</span>
                 </div>
               </div>
               <div class="centerLeftBotFour">
