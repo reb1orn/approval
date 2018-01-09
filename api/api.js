@@ -198,6 +198,14 @@ global.deptGetOrgTreeAndUserPath = '/api-approval/dept/getOrgTreeAndUser'
 global.columnGetPath = '/column/get'
 // 获取所有内容列表
 global.contentGetPath = '/content/get'
+// 删除内容
+global.contentDeletePath = '/content/delete'
+// 设为轮播
+global.contentUpdatePath = '/content/update'
+// 获取内容详情
+global.contentdetailPath = '/content/detail'
+// 保存/编辑内容
+global.contenteditPath = '/content/edit'
 
 
 // *********************员工数据**********************

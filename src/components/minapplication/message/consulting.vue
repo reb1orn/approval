@@ -21,7 +21,8 @@
                             <span>
                                 <p @click='compile(index)'><img src="../../../../static/img/iconfont-bianji.png" alt=""></p>
                                 <p @click='remove(index)'><img src="../../../../static/img/iconfont-shanchu.png" alt=""></p>
-                                <p @click="carousel(index)"><img src="../../../../static/img/iconfont-lunbo-zixun.png" alt=""></p>
+                                <p @click="carousel(index)" v-if="item.isCarousel==1"><img src="../../../../static/img/iconfont-lunbo-zixun.png" alt=""></p>
+                                <p @click="carousel(index)" v-else><img src="../../../../static/img/iconfont-lunbo-zixun-no.png" alt=""></p>
                             </span>
                         </div>
                         
@@ -29,6 +30,15 @@
 
                 </li>
             </ul>
+            <div class="pagination">
+       	        <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    small
+                    layout="prev, pager, next"
+                    :total="totals">
+                </el-pagination>
+            </div>
         </div>
     </div>
 </template>
@@ -40,7 +50,10 @@
         name: '',
         data() {
             return {
-                items:[]
+                currentPage:'',
+                items:[],
+                isCarousel:'',
+                totals:''
             }
         },
         created: function () {
@@ -56,6 +69,7 @@
                               
                         }else{
                             self.items = data.data.records
+                            self.totals = data.data.total
                         }
                     }else{
                         this.$message({
@@ -93,27 +107,156 @@
 
         },
         methods: {
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                let self = this
+                self.getcontentGet({
+                     columnId:sessionStorage.getItem('columnId'),
+                     type:sessionStorage.getItem('columnShowType'),
+                     pageNo:val,
+                     pageSize:10
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        if(data.data.records.length == 0){
+                              
+                        }else{
+                            self.items = data.data.records
+                        }
+                    }else{
+                        this.$message({
+                            type:'info',
+                            message:data.msg
+                        })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.error
+                    })
+                }) 
+
+            },
             // 编辑文档
             compile(index){
-                  this.$router.push({
-                      path:'/home/message/compileMessage'
-                  })
+                let self = this
+                sessionStorage.setItem('Title',this.items[index].contentTitle)
+                sessionStorage.setItem('contentId',this.items[index].contentId)
+                self.getcontentdetail({
+                    columnId:sessionStorage.getItem('columnId'),
+                    contentId:self.items[index].contentId
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        sessionStorage.setItem('detail',JSON.stringify(data.data))
+                        this.$router.push({
+                            path:'/home/message/compileMessage'
+                        })
+                    }else{
+                        this.$message({
+                            type:'info',
+                            message:data.msg
+                        })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.statusText
+                    })
+                })
+                
             },
             // 删除文档
             remove(index){
-
+                let self = this
+                self.getcontentDelete({
+                    contentId:self.items[index].contentId,
+                    type:1
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        this.$message({
+                            type:'success',
+                            message:'删除成功!'
+                        })
+                    }else{
+                       this.$message({
+                        type:'info',
+                        message:data.msg
+                    }) 
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.statusText
+                    })
+                })
             },
             // 设为轮播
             carousel(index){
-
+                let self = this
+                if(self.items[index].isCarousel == 1){
+                    self.isCarousel = 0
+                }else if(self.items[index].isCarousel == 0){
+                    self.isCarousel = 1
+                }
+                self.getcontentUpdate({
+                    oid:sessionStorage.getItem('orgId'),
+                    contentId:self.items[index].contentId,
+                    isCarousel:self.isCarousel
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                     self.getcontentGet({
+                     columnId:sessionStorage.getItem('columnId'),
+                     type:sessionStorage.getItem('columnShowType'),
+                     pageNo:1,
+                     pageSize:10
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        if(data.data.records.length == 0){
+                              
+                        }else{
+                            self.items = data.data.records
+                        }
+                    }else{
+                        this.$message({
+                            type:'info',
+                            message:data.msg
+                        })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.error
+                    })
+                }) 
+                this.$message({
+                    type:'success',
+                    message:'设置成功！'
+                })
+                    }else{
+                        this.$message({
+                        type:'info',
+                        message:data.msg
+                    })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.statusText
+                    })
+                })
             },
-            ...mapActions(['getcontentGet'])
+            ...mapActions(['getcontentGet','getcontentDelete','getcontentUpdate','getcontentdetail'])
 
         }
     }
 
 </script>
 <style scoped>
+	.pagination{
+		float: right;
+		margin-right: 20px;
+	}
     .main_rightTop p {
         color: #303030;
         font-size: 14px;
@@ -155,6 +298,7 @@
      .noticNavs span:nth-child(4) p img{
          width: 24px;
          height: 24px;
+         cursor: pointer;
      }
     .noticNavs span:nth-child(1){
         width: 25%;

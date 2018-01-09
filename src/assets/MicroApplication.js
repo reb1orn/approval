@@ -169,6 +169,46 @@ const microApplication = {
             }
         })
     }, 
+    // 删除内容
+    contentDelete:function contentDelete(ip,postdata){
+        return Vue.http.post(ip,postdata).then(response => {
+            if(response.status == 200){
+                return Promise.resolve(response.body)
+            }else{
+                return Promise.reject(response.data.message)
+            }
+        })
+    },
+    // 设为轮播
+    contentUpdate:function contentUpdate(ip,postdata){
+    return Vue.http.post(ip,postdata).then(response => {
+        if(response.status == 200){
+            return Promise.resolve(response.body)
+        }else{
+            return Promise.reject(response.data.message)
+        }
+      })
+    },
+    // 获取内容详情
+    contentdetail:function contentdetail(ip,postdata){
+        return Vue.http.post(ip,postdata).then(response => {
+            if(response.status == 200){
+                return Promise.resolve(response.body)
+            }else{
+                return Promise.reject(response.data.message)
+            }
+        })
+    },
+    // 保存/编辑内容
+    contentedit:function contentedit(ip,postdata){
+        return Vue.http.post(ip,postdata).then(response => {
+            if(response.status == 200){
+                return Promise.resolve(response.body)
+            }else{
+                return Promise.reject(response.data.message)
+            }
+        })
+    },
 }
 export default microApplication
 // module.exports = companyset

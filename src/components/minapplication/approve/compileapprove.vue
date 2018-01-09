@@ -21,7 +21,7 @@
 							<img :src=approvalImg alt="">
 						 </div>
 					     <div>
-							 <p @click='addApprovars()'>{{item.userNick}}</p>
+							 <p >{{item.userNick}}</p>
 					     </div>		 
                <img :src=arrows alt="" id="arrows" v-show="!(index == usersArrs.length -1) ">
 					</div>		 
@@ -35,7 +35,7 @@
 					</div>
 					<!-- <img :src=arrows alt="" id="arrows"> -->
 					<div class='operation'>
-						<span  @click='unApprovalempty()'>清空</span>
+						<span  @click='unApprovalempty()' v-show="emptyBut">清空</span>
 					    <span @click='unApprovalsettings()'>设置</span>	
 					</div>		 		
 				</div>
@@ -61,7 +61,7 @@
 										</div>      
 					<div class='operation'>
 					    <span @click='deleteApprovalCondition(index)' v-show='item.enabled == 0'>删除</span>	
-              <span  @click='emptyData(index)' v-show='item.enabled == 1'>清空</span>
+              <span  @click='emptyData(index)' v-show='item.enabled == 1 && item.userVo.length !==0'>清空</span>
 					    <span @click='settings(index)' v-show='item.enabled == 1'>设置</span>	
 					</div>
 				</div>	
@@ -226,9 +226,9 @@
 			   </div>
          <div class="unConditionContant" v-show="unConditionContant">暂无审批条件</div>
 			   <div class="conditionContant" v-show='conditionContant'>
-				   <el-radio-group v-model="radioCondition" @change="radioConditionSelet()">
-						<el-radio :label='3' >请假类型</el-radio>
-						<el-radio :label='6' >请假天数</el-radio>						
+				   <el-radio-group  v-model="radioCondition" @change="radioConditionSelet()">
+						<el-radio :label='3' >审批类型</el-radio>
+						<el-radio :label='6' >审批天数</el-radio>					
 					</el-radio-group> 
 						<p class='settingApprovalCondition'  v-show="setApprovalCondition">选送内容将会作为审批条件:</p>
 						<p class='settingApprovalCondition'  v-show="setApprovalConditionDay">请输入“请假天数”的分隔数字，我们将为您自动生成数值区间作为审批条件:</p>	
@@ -238,8 +238,16 @@
 						    </ul>	
 					</div>
 					<div class="counterNumber" v-show="counterNumber">
-					      <input v-model="period" type="number" />	
-						    <img :src=exampleImg  alt="">
+					      <input placeholder="必填项" v-model="period" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+						    <span style="margin-left:30px"><=</span>
+                <input placeholder="可选填" v-model="period1" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <span style="margin-left:30px"><=</span>
+                <input placeholder="可选填" v-model="period2" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <span style="margin-left:30px"><=</span>
+                <input placeholder="可选填" v-model="period3" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <span style="margin-left:30px"><=</span>
+                <input placeholder="可选填" v-model="period4" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <img :src=exampleImg  alt="">
 					</div>	
 			   </div>
                <div class="selectApprovalBot">
@@ -257,6 +265,7 @@ export default {
   name: "set",
   data() {
     return {
+      emptyBut:false,
       conditionContant:false,
       unConditionContant:false,
       ModalsShow: false,
@@ -272,13 +281,9 @@ export default {
       exampleImg: "./static/img/Tb.png",
       counterNumber: false,
       TypeApprovalAudit: false,
-      items: [
-        { approvalName: "请假" },
-        { approvalName: "请假" },
-        { approvalName: "请假" },
-        { approvalName: "请假" }
-      ],
+      items: [],
       radioCondition: 3,
+      radioConditions:9,
       setApprovalCondition: false,
       conditionApprovalMaskLayer: false,
       setApproval: false,
@@ -307,7 +312,12 @@ export default {
       selectRightlists: [],
       counter: 0,
       conditions: "",
-      fields:''
+      fields:'',
+      periodNum:[],
+      period1:'',
+      period2:'',
+      period3:'',
+      period4:''
     };
   },
 
@@ -350,6 +360,11 @@ export default {
     this.setting = sessionStorage.getItem("setting");
     this.approveList = JSON.parse(sessionStorage.getItem("approveList"));
     this.usersArrs = JSON.parse(sessionStorage.getItem("usersArrs"));
+    if(this.usersArrs.length !== 0){
+       this.emptyBut = true
+    }else{
+      this.emptyBut = false
+    }
     if (this.setting == 0) {
       this.radio2 = 0;
     } else if (this.setting == 1) {
@@ -360,6 +375,7 @@ export default {
     this.radioSelet();
     // this.companyList();
     this.radioConditionSelet();
+    this.ApproverSettings()
   },
   watch: {
     period: function(newVal, oldVal) {
@@ -459,6 +475,38 @@ export default {
     }
   },
   methods: {
+
+        // 刷新列表
+    ApproverSettings() {
+      let self = this;
+      self
+        .getapprovalSetItem({
+          modelId: sessionStorage.getItem('modelId')
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            sessionStorage.setItem(
+              "approveList",
+              JSON.stringify(data.data.list)
+            );
+            sessionStorage.setItem(
+              "usersArrs",
+              JSON.stringify(data.data.users)
+            );
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+            type: "info",
+            message: data.msg
+          });
+        });
+    },
     chooseCharge() {
       let self = this;
       self.counter += 1;
@@ -664,6 +712,7 @@ export default {
               if(data.code == '000000'){
                self.usersArrs = data.data.users
                self.unApproval = false
+               self.emptyBut = true
                self.addApprovar = true
               }else{
                 this.$message({
@@ -681,6 +730,7 @@ export default {
               type: "success",
               message: "设置成功！"
             });
+            
           } else {
             this.$message({
               type: "info",
@@ -695,7 +745,10 @@ export default {
 							});
         });
       }
-      
+       this.selectRightlists = []
+        this.selectLeftlists.forEach(function(ele) {
+        ele.open = false;
+      });
     },
     righthandleCheckedCitiesChange(index) {
       var self = this;
@@ -1053,7 +1106,7 @@ export default {
         self.setApprovalConditionDay = true;
         self.setApprovalCondition = false;
         self.counterNumber = true;
-      }
+      } 
     },
     // 取消设置审批条件
     conditionAbolish() {
@@ -1158,10 +1211,17 @@ export default {
 							});
         });
       }else if(self.radioCondition == '6'){
-       self.getapprovalcdnsave({
+        self.periodNum = []
+        if(self.period == ''){
+          this.$message({
+            type:'info',
+            message:'请输入分隔数字'
+          })
+        }else{
+        self.getapprovalcdnsave({
           modelId: self.modelId,
-          field: self.fields,
-          numbers:self.period
+          field: self.fields || self.field ,
+          numbers:self.period + ',' + self.period1 + ',' + self.period2 + ',' + self.period3 + ',' + self.period4
         })
         .then((data) => {
           if (data.code == "000000") {
@@ -1179,7 +1239,9 @@ export default {
 								type: "info",
 								message: msg.statusText
 							});
-        }); 
+        });
+        }
+       
         self.period = ''
       }
       
@@ -1200,11 +1262,11 @@ export default {
               self.unConditionContant = true
               self.conditionContant = false
             }else{
-            self.unConditionContant = false
-            self.conditionContant = true
-              self.items = data.data[0].optValue.split(",");
+              self.unConditionContant = false
+              self.conditionContant = true
               self.field = data.data[0].field;
               self.fields = data.data[1].field
+             self.items = data.data[0].optValue.split(",");
             }
           } else {
             this.$message({
@@ -1261,6 +1323,7 @@ export default {
             });
             self.usersArrs = [];
             self.unApproval = true;
+            self.emptyBut = false
           } else {
             this.$message({
               type: "info",
@@ -1397,6 +1460,7 @@ export default {
         } else {
           self.empty = false;
           self.unApproval = true;
+          self.emptyBut = false
         }
         self
           .getapprovalsaveSetItem({
@@ -1446,6 +1510,7 @@ export default {
     },
 
     ...mapActions([
+      'getapprovalSetItem',
       'getbusiness',
       'getapprovalSetItem',
       "getdeptstaff",
@@ -1544,7 +1609,8 @@ export default {
   width: 100%;
   height: 410px;
   padding-left: 10px;
-  padding-top: 10px;
+  margin-top: -20px;
+
 }
 .settingApprovalCondition {
   margin-left: 30px;
@@ -1601,6 +1667,7 @@ export default {
 .selectApprovalBot {
   width: 100%;
   text-align: center;
+  margin-top: 30px;
 }
 .saveApproval {
   width: 80px;
@@ -1650,7 +1717,7 @@ export default {
 }
 .selectApprovalConditionBox {
   width: 660px;
-  height: 560px;
+  height: 600px;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5);
   animation: madalsBox 0.8s;
   background-color: #fff;

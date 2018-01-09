@@ -443,6 +443,10 @@ export default {
             message: msg.statusText
           });
         });
+        this.selectRightlists = []
+        this.selectLeftlists.forEach(function(ele) {
+        ele.open = false;
+      });
     },
     righthandleCheckedCitiesChange(index) {
       var self = this;

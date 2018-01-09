@@ -244,6 +244,12 @@ export default [
                     }
                 },
                 {
+                    path: 'compileMessage',
+                    component: function (resolve) {
+                        require(['./components/minapplication/message/compileMessage.vue'], resolve)
+                    }
+                },
+                {
                     path: 'induction',
                     component: function (resolve) {
                         require(['./components/minapplication/message/induction.vue'], resolve)

@@ -348,6 +348,22 @@ export default {
     getcontentGet({},postdata){
         return microApplication.contentGet(global.contentGetPath,postdata)
     },  
+    // 删除内容
+    getcontentDelete({},postdata){
+        return microApplication.contentDelete(global.contentDeletePath,postdata)
+    }, 
+    // 设为轮播
+    getcontentUpdate({},postdata){
+        return microApplication.contentUpdate(global.contentUpdatePath,postdata)
+    }, 
+    // 获取内容详情
+    getcontentdetail({},postdata){
+        return microApplication.contentdetail(global.contentdetailPath,postdata)
+    }, 
+    // 保存/编辑内容
+    getcontentedit({},postdata){
+        return microApplication.contentedit(global.contenteditPath,postdata)
+    },
         // ***********************员工数据************************
     getemployeeNumber ({},postdata){
         return microApplication.employeeNumber(global.employeeNumberPath,postdata)

@@ -37,52 +37,51 @@
         },
 
         created: function() {
-            sessionStorage.removeItem('columnId')
-                  this.setDate()
-                  
-                  let self = this 
-                  self.getcolumnGet({
-                      oid:sessionStorage.getItem('orgId')
-                  }).then((data)=>{
-                      if(data.code == '000000'){
-                          if(data.data.length == 0){
-                                  self.chidlists = [
-                                      {
-                                          columnName:'企业文化',
-                                          indexUrl:'consulting' 
-                                      },
-                                      {
-                                          columnName:'培训资料',
-                                          indexUrl:'induction'
-                                      },
-                                      {
-                                          columnName:'入职培训',
-                                          indexUrl:'induction'
-                                      },
-                                      {
-                                          columnName:'在职培训',
-                                          indexUrl:'onJob'
-                                      },
-                                      {
-                                          columnName:'公司制度',
-                                          push:'regime'
-                                      }
-                                  ]                         
-                          }else{
-                            self.chidlists = data.data
-                          }
-                      }else{
-                          this.$message({
-                              type:'info',
-                              message:data.msg
-                          })
-                      }
-                  }).catch(msg=>{
-                      this.$message({
-                          type:'info',
-                          message:msg.statusText
-                      })
-                  })
+                this.setDate()
+                let self = this 
+                self.getcolumnGet({
+                    oid:sessionStorage.getItem('orgId')
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        if(data.data.length == 0){
+                                self.chidlists = [
+                                    {
+                                        columnName:'企业文化',
+                                        indexUrl:'consulting' 
+                                    },
+                                    {
+                                        columnName:'培训资料',
+                                        indexUrl:'induction'
+                                    },
+                                    {
+                                        columnName:'入职培训',
+                                        indexUrl:'induction'
+                                    },
+                                    {
+                                        columnName:'在职培训',
+                                        indexUrl:'onJob'
+                                    },
+                                    {
+                                        columnName:'公司制度',
+                                        indexUrl:'regime'
+                                    }
+                                ]                         
+                        }else{
+                        self.chidlists = data.data
+                        sessionStorage.setItem('columnId',data.data[0].columnId)
+                        }
+                    }else{
+                        this.$message({
+                            type:'info',
+                            message:data.msg
+                        })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.statusText
+                    })
+                })
                  
         },
         watch: {
@@ -94,13 +93,21 @@
             setDate: function() {
                 var psthStr = this.$route.path.split('/')[3]
                 switch (psthStr) {
-                    case 'sendNotice':
+                    case 'consulting':
                         this.isSadeNav = 0
                         this.isSadeNav_1 = 0
                         break;
-                        case 'alreadysentNotice':
+                        case 'induction':
                         this.isSadeNav = 1
                         this.isSadeNav_1 = 1
+                        break;
+                        case 'onJob':
+                        this.isSadeNav = 1
+                        this.isSadeNav_1 = 1
+                        break;
+                        case 'regime':
+                        this.isSadeNav = 2
+                        this.isSadeNav_1 = 2
                         break;
                 }
             },

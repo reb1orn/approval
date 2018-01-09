@@ -62,6 +62,22 @@ module.exports = {
                 target: "http://" + global.messageIp + ":" + global.messagePort,
                 changeOrigin: true,
             }, 
+            '/content/delete': {
+                target: "http://" + global.messageIp + ":" + global.messagePort,
+                changeOrigin: true,
+            },
+            '/content/update': {
+                target: "http://" + global.messageIp + ":" + global.messagePort,
+                changeOrigin: true,
+            },
+            '/content/detail': {
+                target: "http://" + global.messageIp + ":" + global.messagePort,
+                changeOrigin: true,
+            },
+            '/content/edit': {
+                target: "http://" + global.messageIp + ":" + global.messagePort,
+                changeOrigin: true,
+            },
             // '/approval/list': {
             //     target: "http://" + global.approveIp + ':' + global.approvePort,
             //     changeOrigin: true,
