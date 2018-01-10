@@ -57,6 +57,9 @@
             }
         },
         created: function () {
+                sessionStorage.removeItem('detail')
+                sessionStorage.removeItem('Title')
+                sessionStorage.removeItem('contentId')
                 let self = this 
                 self.getcontentGet({
                      columnId:sessionStorage.getItem('columnId'),
@@ -87,9 +90,9 @@
          filters: {
             typeFun(val) {
             if (val == 1) {
-                return "否";
-            } else {
                 return "是";
+            } else {
+                return "否";
             }
             },
             Date(val){
@@ -178,6 +181,30 @@
                             type:'success',
                             message:'删除成功!'
                         })
+                        self.getcontentGet({
+                            columnId:sessionStorage.getItem('columnId'),
+                            type:sessionStorage.getItem('columnShowType'),
+                            pageNo:1,
+                            pageSize:10
+                        }).then((data)=>{
+                            if(data.code == '000000'){
+                                if(data.data.records.length == 0){
+                                    
+                                }else{
+                                    self.items = data.data.records
+                                }
+                            }else{
+                                this.$message({
+                                    type:'info',
+                                    message:data.msg
+                                })
+                            }
+                        }).catch(msg=>{
+                            this.$message({
+                                type:'info',
+                                message:msg.error
+                            })
+                        })  
                     }else{
                        this.$message({
                         type:'info',

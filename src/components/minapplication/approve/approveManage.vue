@@ -354,6 +354,7 @@ export default {
       this.selectLeftlists.forEach(function(ele) {
         ele.open = false;
       });
+      this.checked = false
       this.ModalsShow = false;
       self.counter = 0;
     },
@@ -398,6 +399,9 @@ export default {
       this.selectMembersVal = val;
       self.counter = 0;
       let willCompile = self.itemsa[self.copyPeople].modelId;
+      if(self.uidsVal == ''){
+       this.ModalsShow = false; 
+      }else{
       self
         .getapprovalcopysave({
           modelId: willCompile,
@@ -443,6 +447,7 @@ export default {
             message: msg.statusText
           });
         });
+        }
         this.selectRightlists = []
         this.selectLeftlists.forEach(function(ele) {
         ele.open = false;

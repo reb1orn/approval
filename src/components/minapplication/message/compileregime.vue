@@ -116,7 +116,7 @@
             },
             preview(){
                 this.$router.push({
-                    path:'/home/message/consulting'
+                    path:'/home/message/regime'
                 })
             },
             cancle(){
@@ -167,7 +167,7 @@
                                  message:'保存成功！'
                              })
                              this.$router.push({
-                                 path:'/home/message/consulting'
+                                 path:'/home/message/regime'
                              })
                        }else{
                            this.$message({

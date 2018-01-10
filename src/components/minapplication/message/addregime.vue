@@ -1,7 +1,8 @@
 <template xmlns:v-on="http://www.w3.org/1999/xhtml">
     <div class="set" style="height: 100%;">
         <div class="main_rightTop">
-            <p>主题：{{contentTitle}}</p>
+            <p>主题：<input type="text" v-model="title" placeholder="请输入主题"></p>
+
         </div>
         <div class="main_rightMain">
  
@@ -40,6 +41,7 @@
         name: '',
         data() {
             return {
+                title:'',
                 contentTitle:'',
                 ispreview:false,
                 islogoImg: '',
@@ -75,10 +77,10 @@
             }
         },
         created: function () {
-            this.contentTitle = sessionStorage.getItem('Title')
-            this.detail = JSON.parse(sessionStorage.getItem('detail'))
-            this.defaultImg_1 = this.detail.contentImg
-            this.inputContent = this.detail.contentDetail 
+            // this.contentTitle = sessionStorage.getItem('Title')
+            // this.detail = JSON.parse(sessionStorage.getItem('detail'))
+            // this.defaultImg_1 = this.detail.contentImg
+            // this.inputContent = this.detail.contentDetail 
         },
         mounted() {
             this.createEditor()
@@ -116,7 +118,7 @@
             },
             preview(){
                 this.$router.push({
-                    path:'/home/message/consulting'
+                    path:'/home/message/regime'
                 })
             },
             cancle(){
@@ -154,7 +156,7 @@
                         oid:sessionStorage.getItem('orgId'),
                         uid:sessionStorage.getItem('userId'),
                         contentId:sessionStorage.getItem('contentId'),
-                        contentTitle:sessionStorage.getItem('Title'),
+                        contentTitle:sessionStorage.getItem('Title') || self.title,
                         contentImg:self.defaultImg_1,
                         contentEnclosure:"",
                         enclosureInfo:"",
@@ -167,7 +169,7 @@
                                  message:'保存成功！'
                              })
                              this.$router.push({
-                                 path:'/home/message/consulting'
+                                 path:'/home/message/regime'
                              })
                        }else{
                            this.$message({

@@ -267,6 +267,18 @@ export default [
                     require(['./components/minapplication/message/regime.vue'], resolve)
                 }
                 },
+                {
+                    path: 'addregime',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/addregime.vue'], resolve)
+                }
+                },
+                {
+                    path: 'compileregime',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/compileregime.vue'], resolve)
+                }
+                },
             ]
         }, 
         // 日志

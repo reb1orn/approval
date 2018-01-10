@@ -3,9 +3,12 @@
         <div class="main_left">
         	<div class="approve">资讯</div>
                 <ul>
-                <li v-for="(list,index) in chidlists" :key='index' :class="{sadeNav:isSadeNav == index}" @click="sadeNavClick(index)">
+                <li v-for="(list,index) in chidlists" :key='index' :class="{sadeNav:isSadeNav == index}" >
                     <div>
-                        <span>{{list.columnName}}</span>
+                        <span @click="sadeNavClick(list,index)" class="listColumnName">{{list.columnName}}</span>
+                        <div class="nodeChildren" v-show="list.clickNode" v-for="(children,index) in list.children" :key="index" @click='nodeChildren(list,index)' :class="{sadeNav:isSadeNav == index}">
+                            <span>{{children.columnName}}</span>
+                        </div>
                     </div>
                 </li>
             </ul>
@@ -89,6 +92,14 @@
                  "$route": "setDate"
         },
         methods: {
+            nodeChildren(list,index){
+               this.isSadeNav = index
+               var pathStr = this.chidlists[index].indexUrl
+                var url = '/home/message/' + pathStr
+                this.$router.push({
+                    path: url
+                }) 
+            },
         	 //  根据路径匹配标记导航
             setDate: function() {
                 var psthStr = this.$route.path.split('/')[3]
@@ -111,7 +122,8 @@
                         break;
                 }
             },
-            sadeNavClick(index){
+            sadeNavClick(list,index){
+                list.clickNode = !list.clickNode 
                 this.isSadeNav = index
                 var pathStr = this.chidlists[index].indexUrl
                 sessionStorage.setItem('columnId',this.chidlists[index].columnId)
@@ -128,6 +140,20 @@
 </script>
 <!--私有样式-->
 <style scoped>
+.nodeChildren{
+    padding-left: 20px;
+    animation: nodeChildrens .8s forwards;   
+}
+@keyframes nodeChildrens {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 40px;
+    opacity: 1;
+  }
+}
 .sadeNav{
     color:#FCB298!important;
     background: rgba(231,116,74,0.1);

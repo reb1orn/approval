@@ -231,27 +231,22 @@
 						<el-radio :label='6' >审批天数</el-radio>					
 					</el-radio-group> 
 						<p class='settingApprovalCondition'  v-show="setApprovalCondition">选送内容将会作为审批条件:</p>
-						<p class='settingApprovalCondition'  v-show="setApprovalConditionDay">请输入“请假天数”的分隔数字，我们将为您自动生成数值区间作为审批条件:</p>	
+						<p class='settingApprovalCondition'  v-show="setApprovalConditionDay">请输入“审批天数”的分隔数字，我们将为您自动生成数值区间作为审批条件:</p>	
 			        <div class='TypeApprovalAudit' v-show="TypeApprovalAudit">
 					        <ul>
 							   <li v-for='(item ,index) in items' :key='index'>{{item}}</li>
 						    </ul>	
 					</div>
 					<div class="counterNumber" v-show="counterNumber">
-					      <input placeholder="必填项" v-model="period" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+					      <input placeholder="必填项" v-model="period" type="text" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
 						    <span style="margin-left:30px"><=</span>
-                <input placeholder="可选填" v-model="period1" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
-                <span style="margin-left:30px"><=</span>
-                <input placeholder="可选填" v-model="period2" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
-                <span style="margin-left:30px"><=</span>
-                <input placeholder="可选填" v-model="period3" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
-                <span style="margin-left:30px"><=</span>
-                <input placeholder="可选填" v-model="period4" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <input placeholder="可选填" v-model="period1" type="text" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                	
                 <img :src=exampleImg  alt="">
 					</div>	
 			   </div>
                <div class="selectApprovalBot">
-				     <div class="saveApproval" @click='saveApprovalCondition()'>保存</div>
+				     <div class="saveApproval" @click='saveApprovalCondition()' :class="{activeSave:IsactiveSae}">保存</div>
 					 <div class="abolishBox" @click='conditionAbolish()'>取消</div> 
 			   </div>  
 		</div>
@@ -265,6 +260,7 @@ export default {
   name: "set",
   data() {
     return {
+      IsactiveSae:false,
       emptyBut:false,
       conditionContant:false,
       unConditionContant:false,
@@ -378,13 +374,13 @@ export default {
     this.ApproverSettings()
   },
   watch: {
-    period: function(newVal, oldVal) {
-      const regex = /^([0-9]*[1-9][0-9]*(.[0-9]+)?|[0]+.[0-9]*[1-9][0-9]*)$/;
-      if (!regex.test(newVal)) {
-        //如果小于等于零
-        this.period = oldVal; //恢复原值
-      }
-    }
+    // period: function(newVal, oldVal) {
+    //   const regex = /^([0-9]*[1-9][0-9]*(.[0-9]+)?|[0]+.[0-9]*[1-9][0-9]*)$/;
+    //   if (!regex.test(newVal)) {
+    //     //如果小于等于零
+    //     this.period = oldVal; //恢复原值
+    //   }
+    // }
     //  radioSelet(){
     // 	let self = this
     // 	if(self.radio2 == 2){
@@ -656,8 +652,11 @@ export default {
       }
       this.selectMembersVal = val;
       self.counter = 0;
-      if(self.conditions !== undefined ){
-        self.getapprovalupdateProcess({
+      if(self.uidsVal == ''){
+        this.ModalsShow = false
+      }else{
+      if(self.conditions !== undefined && self.conditions !== ''){
+          self.getapprovalupdateProcess({
           modelId: self.modelId,
           conditionId: self.approveList[self.conditions].conditions,
           userArray: self.uidsVal
@@ -697,8 +696,8 @@ export default {
 								type: "info",
 								message: msg.statusText
 							});
-        });
-      }else if(self.conditions == undefined ){
+        }); 
+      }else if(self.conditions == undefined){
         self.getapprovalupdateProcess({
           modelId: self.modelId,
           conditionId: '',
@@ -744,6 +743,53 @@ export default {
 								message: msg.statusText
 							});
         });
+      }else if(self.conditions == ''){
+        self.getapprovalupdateProcess({
+          modelId: self.modelId,
+          conditionId: '',
+          userArray: self.uidsVal
+        })
+        .then(data => {
+          if (data.code == "000000") {
+            self.getapprovalSetItem({
+             modelId:self.modelId 
+            }).then((data)=>{
+              if(data.code == '000000'){
+               self.usersArrs = data.data.users
+               self.unApproval = false
+               self.emptyBut = true
+               self.addApprovar = true
+              }else{
+                this.$message({
+                  type: "info",
+                  message: data.msg
+                }); 
+              }
+            }).catch(msg=>{
+              this.$message({
+								type: "info",
+								message: msg.statusText
+							}); 
+            })
+            this.$message({
+              type: "success",
+              message: "设置成功！"
+            });
+            
+          } else {
+            this.$message({
+              type: "info",
+              message: data.msg
+            });
+          }
+        })
+        .catch(msg => {
+          this.$message({
+								type: "info",
+								message: msg.statusText
+							});
+        });
+      } 
       }
        this.selectRightlists = []
         this.selectLeftlists.forEach(function(ele) {
@@ -1217,11 +1263,18 @@ export default {
             type:'info',
             message:'请输入分隔数字'
           })
+        }else if(self.period > self.period1 || self.period == self.period1 ){
+            this.$message({
+            type:'info',
+            message:'输入有误，请重新输入'
+          }) 
+          self.period = ''
+          self.period1 = ''
         }else{
         self.getapprovalcdnsave({
           modelId: self.modelId,
           field: self.fields || self.field ,
-          numbers:self.period + ',' + self.period1 + ',' + self.period2 + ',' + self.period3 + ',' + self.period4
+          numbers:self.period + ',' + self.period1 
         })
         .then((data) => {
           if (data.code == "000000") {
@@ -1243,6 +1296,7 @@ export default {
         }
        
         self.period = ''
+        self.period1 = ''
       }
       
       
@@ -1259,9 +1313,11 @@ export default {
           if (data.code == "000000") {
             // data.data = JSON.parse(JSON.stringify(data.data))
             if(data.data.length == 0){
+              self.IsactiveSae = true
               self.unConditionContant = true
               self.conditionContant = false
             }else{
+              self.IsactiveSae =  false
               self.unConditionContant = false
               self.conditionContant = true
               self.field = data.data[0].field;
@@ -1535,6 +1591,11 @@ export default {
 };
 </script>
 <style scoped>
+.activeSave{
+  background-color: #aeaeae!important;
+  pointer-events: none;
+  cursor: default;
+}
 .unConditionContant{
   width: 100%;
   height: 410px;
@@ -1557,6 +1618,9 @@ export default {
   width: 64px;
   text-align: center;
   margin-top: 10px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .conditionTitle {
   height: 50px;
@@ -1833,6 +1897,9 @@ export default {
   text-align: center;
   /* margin-left: 10px; */
   margin-top: 10px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap; 
 }
 .unApproval > div > p {
   margin-left: -4px;
