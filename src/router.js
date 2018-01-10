@@ -274,9 +274,33 @@ export default [
                 }
                 },
                 {
+                    path: 'addonJob',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/addonJob.vue'], resolve)
+                }
+                },
+                {
+                    path: 'addinduction',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/addinduction.vue'], resolve)
+                }
+                },
+                {
                     path: 'compileregime',
                     component: function (resolve) {
                     require(['./components/minapplication/message/compileregime.vue'], resolve)
+                }
+                },
+                {
+                    path: 'compileonJob',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/compileonJob.vue'], resolve)
+                }
+                },
+                {
+                    path: 'compileinduction',
+                    component: function (resolve) {
+                    require(['./components/minapplication/message/compileinduction.vue'], resolve)
                 }
                 },
             ]

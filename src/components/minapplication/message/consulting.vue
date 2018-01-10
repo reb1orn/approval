@@ -20,7 +20,7 @@
                             <span>{{item.lastMdfTime | Date}}</span>
                             <span>
                                 <p @click='compile(index)'><img src="../../../../static/img/iconfont-bianji.png" alt=""></p>
-                                <p @click='remove(index)'><img src="../../../../static/img/iconfont-shanchu.png" alt=""></p>
+                                <p @click='remove(index)' class="remove"><img src="../../../../static/img/iconfont-shanchu.png" alt=""></p>
                                 <p @click="carousel(index)" v-if="item.isCarousel==1"><img src="../../../../static/img/iconfont-lunbo-zixun.png" alt=""></p>
                                 <p @click="carousel(index)" v-else><img src="../../../../static/img/iconfont-lunbo-zixun-no.png" alt=""></p>
                             </span>
@@ -60,7 +60,37 @@
                 sessionStorage.removeItem('detail')
                 sessionStorage.removeItem('Title')
                 sessionStorage.removeItem('contentId')
-                let self = this 
+                let self = this
+                self.getcolumnGet({
+                    oid:sessionStorage.getItem('orgId')
+                }).then((data)=>{
+                    if(data.code == '000000'){
+                        if(data.data.length == 0){
+                                self.chidlists = [
+                                    {
+                                        columnName:'企业文化',
+                                        indexUrl:'consulting' 
+                                    },
+                                    {
+                                        columnName:'培训资料',
+                                        indexUrl:'induction'
+                                    },
+                                    {
+                                        columnName:'入职培训',
+                                        indexUrl:'induction'
+                                    },
+                                    {
+                                        columnName:'在职培训',
+                                        indexUrl:'onJob'
+                                    },
+                                    {
+                                        columnName:'公司制度',
+                                        indexUrl:'regime'
+                                    }
+                                ]                         
+                        }else{
+                        self.chidlists = data.data
+                        sessionStorage.setItem('columnId',data.data[0].columnId)
                 self.getcontentGet({
                      columnId:sessionStorage.getItem('columnId'),
                      type:sessionStorage.getItem('columnShowType'),
@@ -86,6 +116,21 @@
                         message:msg.error
                     })
                 })
+                        }
+                    }else{
+                        this.$message({
+                            type:'info',
+                            message:data.msg
+                        })
+                    }
+                }).catch(msg=>{
+                    this.$message({
+                        type:'info',
+                        message:msg.statusText
+                    })
+                })
+                 
+            
         },
          filters: {
             typeFun(val) {
@@ -273,13 +318,14 @@
                     })
                 })
             },
-            ...mapActions(['getcontentGet','getcontentDelete','getcontentUpdate','getcontentdetail'])
+            ...mapActions(['getcolumnGet','getcontentGet','getcontentDelete','getcontentUpdate','getcontentdetail'])
 
         }
     }
 
 </script>
 <style scoped>
+
 	.pagination{
 		float: right;
 		margin-right: 20px;
@@ -331,6 +377,10 @@
         width: 25%;
         text-align: left;
         padding-left: 24px;
+    }
+    .remove{
+        pointer-events: none;
+        cursor: default;
     }
     .noticNavs span{
         float: left;

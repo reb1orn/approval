@@ -56,7 +56,7 @@
 													<img :src=approvalImg alt="">	
 												</div>
 												<div>
-														<p @click='addApprovars(index)'>请添加审批人</p>	
+														<p @click='addApprovars(index)' :class="{activeAdd:item.enabled == 0}">请添加审批人</p>	
 												</div>
 										</div>      
 					<div class='operation'>
@@ -238,9 +238,9 @@
 						    </ul>	
 					</div>
 					<div class="counterNumber" v-show="counterNumber">
-					      <input placeholder="必填项" v-model="period" type="text" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+					      <input placeholder="必填项" v-model="period" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
 						    <span style="margin-left:30px"><=</span>
-                <input placeholder="可选填" v-model="period1" type="text" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
+                <input placeholder="可选填" v-model="period1" type="number" onkeyup="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}" onafterpaste="if(this.value.length==1){this.value=this.value.replace(/[^1-9]/g,'')}else{this.value=this.value.replace(/\D/g,'')}"/>	
                 	
                 <img :src=exampleImg  alt="">
 					</div>	
@@ -609,6 +609,7 @@ export default {
       this.selectLeftlists.forEach(function(ele) {
         ele.open = false;
       });
+      self.checked = false
       this.ModalsShow = false;
       self.counter = 0;
     },
@@ -795,6 +796,7 @@ export default {
         this.selectLeftlists.forEach(function(ele) {
         ele.open = false;
       });
+      self.checked = false
     },
     righthandleCheckedCitiesChange(index) {
       var self = this;
@@ -1143,6 +1145,7 @@ export default {
     radioConditionSelet() {
       let self = this;
       if (self.radioCondition == "3") {
+        self.IsactiveSae = true
         self.TypeApprovalAudit = true;
         self.setApprovalCondition = true;
         self.setApprovalConditionDay = false;
@@ -1152,6 +1155,7 @@ export default {
         self.setApprovalConditionDay = true;
         self.setApprovalCondition = false;
         self.counterNumber = true;
+        self.IsactiveSae = false
       } 
     },
     // 取消设置审批条件
@@ -1233,6 +1237,7 @@ export default {
     // 保存审批条件
     saveApprovalCondition() {
       let self = this;
+      const regex = /^([0-9]*[1-9][0-9]*(.[0-9]+)?|[0]+.[0-9]*[1-9][0-9]*)$/;
       if(self.radioCondition == '3'){
         self.getapprovalcdnsave({
           modelId: self.modelId,
@@ -1263,13 +1268,6 @@ export default {
             type:'info',
             message:'请输入分隔数字'
           })
-        }else if(self.period > self.period1 || self.period == self.period1 ){
-            this.$message({
-            type:'info',
-            message:'输入有误，请重新输入'
-          }) 
-          self.period = ''
-          self.period1 = ''
         }else{
         self.getapprovalcdnsave({
           modelId: self.modelId,
@@ -1309,13 +1307,29 @@ export default {
       self.getapprovalcdnget({
           modelId: self.modelId
         })
-        .then(data => {
+        .then((data) => {
           if (data.code == "000000") {
             // data.data = JSON.parse(JSON.stringify(data.data))
             if(data.data.length == 0){
               self.IsactiveSae = true
               self.unConditionContant = true
               self.conditionContant = false
+            }else if(data.data.length == 1){
+              if(self.radioCondition == '3'){
+              self.IsactiveSae =  true 
+              self.unConditionContant = false
+              self.conditionContant = true
+              self.field = data.data[0].field;
+              self.fields = data.data[1].field
+              self.items = data.data[0].optValue.split(",");
+              }else if(self.radioCondition == '6'){
+              self.IsactiveSae =  false
+              self.unConditionContant = false
+              self.conditionContant = true
+              self.field = data.data[0].field;
+              self.fields = data.data[1].field
+              self.items = data.data[0].optValue.split(","); 
+              }
             }else{
               self.IsactiveSae =  false
               self.unConditionContant = false
@@ -1332,10 +1346,7 @@ export default {
           }
         })
         .catch(msg => {
-          this.$message({
-								type: "info",
-								message: msg.statusText
-							});
+       
         });
     },
     // 获取公司部门信息
@@ -1591,6 +1602,11 @@ export default {
 };
 </script>
 <style scoped>
+.activeAdd{
+  color: #303030!important;
+  pointer-events: none;
+  cursor: default; 
+}
 .activeSave{
   background-color: #aeaeae!important;
   pointer-events: none;

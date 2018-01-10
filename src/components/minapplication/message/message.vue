@@ -41,6 +41,7 @@
 
         created: function() {
                 this.setDate()
+                // sessionStorage.removeItem('columnId')
                 let self = this 
                 self.getcolumnGet({
                     oid:sessionStorage.getItem('orgId')
